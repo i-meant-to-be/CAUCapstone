@@ -1,2 +1,2 @@
 def function():
-    print("### Python function called.")
+    print("### Python function called.", end='')

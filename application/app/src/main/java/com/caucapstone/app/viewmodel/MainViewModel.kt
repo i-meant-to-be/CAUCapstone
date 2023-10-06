@@ -5,8 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.chaquo.python.PyException
 import com.chaquo.python.Python
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class MainViewModel() : ViewModel() {
+@HiltViewModel
+class MainViewModel @Inject constructor() : ViewModel() {
     private val _py = Python.getInstance()
     private val _output = mutableStateOf("(empty)")
     val output: State<String> = _output

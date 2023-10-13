@@ -12,7 +12,9 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor() : ViewModel() {
     private val _py = Python.getInstance()
     private val _output = mutableStateOf("(empty)")
+    private val _navControllerState = mutableStateOf(0)
     val output: State<String> = _output
+    val navControllerState = _navControllerState
 
     fun init() {
         val sys = this._py.getModule("sys")
@@ -29,5 +31,9 @@ class MainViewModel @Inject constructor() : ViewModel() {
         } catch (throwable: Throwable) {
             throwable.printStackTrace()
         }
+    }
+
+    fun setNavControllerState(state: Int) {
+        _navControllerState.value = state
     }
 }

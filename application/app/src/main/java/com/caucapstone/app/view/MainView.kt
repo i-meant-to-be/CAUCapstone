@@ -1,34 +1,31 @@
 package com.caucapstone.app.view
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.FileCopy
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.caucapstone.app.data.MainBottomBarItemData
+import com.caucapstone.app.data.globalPaddingValue
+import com.caucapstone.app.util.NavItem
 import com.caucapstone.app.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,20 +33,10 @@ import com.caucapstone.app.viewmodel.MainViewModel
 fun MainView(viewModel: MainViewModel = hiltViewModel()) {
     val navController = rememberNavController()
 
-    Scaffold(bottomBar = { BottomBar() }) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    top = 10.dp, start = 10.dp, end = 10.dp,
-                    bottom = it.calculateBottomPadding()
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            MainNavContainer(navController)
-
-            /*
-            Surface() {
+    Scaffold(bottomBar = { BottomBar(navController, viewModel) }) {
+        /*
+        Column(modifier = Modifier.fillMaxSize().padding(globalPaddingValue)) {
+            Surface(modifier = Modifier.padding(it)) {
                 Text(
                     text = viewModel.output.value
                 )
@@ -58,18 +45,29 @@ fun MainView(viewModel: MainViewModel = hiltViewModel()) {
             Button(onClick = { viewModel.init() }) {
                 Text("Run python codes")
             }
+        }
 
-             */
+         */
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = it.calculateBottomPadding()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            MainNavContainer(navController)
         }
     }
 }
 
 @Composable
-fun BottomBar() {
-    var selectedItem by remember { mutableStateOf(0) }
+fun BottomBar(
+    navController: NavHostController,
+    viewModel: MainViewModel
+) {
     val items = listOf(
-        MainBottomBarItemData("Camera", Icons.Filled.CameraAlt),
-        MainBottomBarItemData("File", Icons.Filled.FileCopy)
+        NavItem.CameraNavItem,
+        NavItem.FileNavItem,
+        NavItem.SettingNavItem
     )
 
     NavigationBar {
@@ -77,12 +75,18 @@ fun BottomBar() {
             NavigationBarItem(
                 icon = { Icon(item.icon, contentDescription = item.title) },
                 label = { Text(item.title, color = MaterialTheme.colorScheme.onBackground) },
-                selected = selectedItem == index,
-                onClick = { selectedItem = index }
+                selected = viewModel.navControllerState.value == index,
+                onClick = {
+                    viewModel.setNavControllerState(index)
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
-        }
-        IconButton(onClick = { /*TODO*/ }) {
-            Icon(Icons.Filled.Settings, contentDescription = null)
         }
     }
 }
@@ -91,9 +95,11 @@ fun BottomBar() {
 fun MainNavContainer(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = "/camera"
+        startDestination = "/file",
+        modifier = Modifier.fillMaxSize()
     ) {
-        composable("/camera") { CameraView(navController) }
-        composable("/file") { FileView(navController) }
+        composable("/camera") { CameraView() }
+        composable("/file") { FileView() }
+        composable("/setting") { SettingView() }
     }
 }

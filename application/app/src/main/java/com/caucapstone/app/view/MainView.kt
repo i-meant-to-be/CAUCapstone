@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -73,8 +74,8 @@ fun BottomBar(
     NavigationBar {
         items.forEachIndexed { index, item ->
             NavigationBarItem(
-                icon = { Icon(item.icon, contentDescription = item.title) },
-                label = { Text(item.title, color = MaterialTheme.colorScheme.onBackground) },
+                icon = { Icon(item.icon, contentDescription = stringResource(item.title)) },
+                label = { Text(stringResource(item.title), color = MaterialTheme.colorScheme.onBackground) },
                 selected = viewModel.navControllerState.value == index,
                 onClick = {
                     viewModel.setNavControllerState(index)

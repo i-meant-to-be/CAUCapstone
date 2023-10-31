@@ -6,14 +6,15 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.FileCopy
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.caucapstone.app.R
 
 sealed class NavItem(
-    val title: String,
+    val title: Int,
     val icon: ImageVector,
     val route: String
 ) {
-    object MainNavItem : NavItem("Main", Icons.Filled.Apps, "/")
-    object CameraNavItem : NavItem("Camera", Icons.Filled.CameraAlt,"/camera")
-    object FileNavItem : NavItem("File", Icons.Filled.FileCopy,"/file")
-    object SettingNavItem : NavItem("Setting", Icons.Filled.Settings,"/setting")
+    object MainNavItem : NavItem(0, Icons.Filled.Apps, "/")
+    object CameraNavItem : NavItem(R.string.main_nav_bar_name_camera, Icons.Filled.CameraAlt,"/camera")
+    object FileNavItem : NavItem(R.string.main_nav_bar_name_file, Icons.Filled.FileCopy,"/file")
+    object SettingNavItem : NavItem(R.string.main_nav_bar_name_setting, Icons.Filled.Settings,"/setting")
 }

@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+option java_package = "com.caucapstone.app";
+option java_multiple_files = true;
+
+message SettingData {
+  bool docMode = 1;
+  bool removeGlare = 2;
+  int32 colorSensitivity = 3;
+}

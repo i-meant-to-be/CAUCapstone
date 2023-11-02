@@ -6,11 +6,13 @@ import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.util.Size
 import android.view.View
 import android.widget.ImageView
 import android.widget.SeekBar
@@ -37,6 +39,11 @@ val TYPE_NUM_PROTANOPIA = 1
 val TYPE_NUM_DEUTERANOPIA = 2
 val TYPE_NUM_TRITANOPIA = 3
 
+val resolutions = listOf(
+    Size(1920, 1080),  // Full HD
+    Size(1280, 720),   // HD
+    Size(640, 480)     // VGA
+)
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
@@ -52,6 +59,12 @@ class MainActivity : AppCompatActivity() {
     private var isCovered = false
     private var isDaltoned = false
     private var isStriped = false
+
+    private var coverRotation : Int = 0
+    private var daltonRotation : Int = 0
+    private var stripeRotation : Int = 0
+
+
 
     var hueCriteria = 0F
     var blindType = 0
@@ -86,6 +99,7 @@ class MainActivity : AppCompatActivity() {
         coverView.visibility = View.INVISIBLE
         daltonView.visibility = View.INVISIBLE
         stripeView.visibility = View.INVISIBLE
+        viewBinding.showColorBoundary.visibility = View.INVISIBLE
 
         //click covered Filter
         viewBinding.coveredButton.setOnClickListener{
@@ -97,9 +111,11 @@ class MainActivity : AppCompatActivity() {
             stripeView.visibility = View.INVISIBLE
             if(isCovered){
                 coverView.visibility = View.VISIBLE
+                viewBinding.showColorBoundary.visibility = View.VISIBLE
             }
             else{
                 coverView.visibility = View.INVISIBLE
+                viewBinding.showColorBoundary.visibility = View.INVISIBLE
             }
         }
         //click Daltoned Filter
@@ -111,6 +127,7 @@ class MainActivity : AppCompatActivity() {
 
                 coverView.visibility = View.INVISIBLE
                 stripeView.visibility = View.INVISIBLE
+                viewBinding.showColorBoundary.visibility = View.INVISIBLE
                 if (isDaltoned) {
                     daltonView.visibility = View.VISIBLE
                 } else {
@@ -131,6 +148,7 @@ class MainActivity : AppCompatActivity() {
 
                 coverView.visibility = View.INVISIBLE
                 daltonView.visibility = View.INVISIBLE
+                viewBinding.showColorBoundary.visibility = View.INVISIBLE
                 if (isStriped) {
                     stripeView.visibility = View.VISIBLE
                 } else {
@@ -260,6 +278,7 @@ class MainActivity : AppCompatActivity() {
                 override fun onStopTrackingTouch(p0: SeekBar?) {}
             })
 
+
             //지정된 범위 외 색상들을 흑백 처리
             val imageAnalyzerDeleteAnotherColor = ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -270,11 +289,13 @@ class MainActivity : AppCompatActivity() {
             imageAnalyzerDeleteAnotherColor.setAnalyzer(
                 Executors.newSingleThreadExecutor(),
                 CoverAnalyzer { bitMap ->
-//                val matrix = Matrix()
-//                matrix.postRotate(90f) // 90도 회전
-//                val rotatedBitmap = Bitmap.createBitmap(bitMap!!, 0, 0, bitMap.width, bitMap.height, matrix, true)
+
+                val matrix = Matrix()
+                matrix.postRotate(coverRotation.toFloat()) // 90도 회전
+                val rotatedBitmap = Bitmap.createBitmap(bitMap!!, 0, 0, bitMap.width, bitMap.height, matrix, true)
+
                     runOnUiThread {
-                        coverView.setImageBitmap(bitMap)
+                        coverView.setImageBitmap(rotatedBitmap)
                     }
                 })
 
@@ -290,8 +311,12 @@ class MainActivity : AppCompatActivity() {
                 Executors.newSingleThreadExecutor(),
                 DaltonAnalyzer { bitMap ->
 
+                    val matrix = Matrix()
+                    matrix.postRotate(daltonRotation.toFloat()) // 90도 회전
+                    val rotatedBitmap = Bitmap.createBitmap(bitMap!!, 0, 0, bitMap.width, bitMap.height, matrix, true)
+
                     runOnUiThread {
-                        daltonView.setImageBitmap(bitMap)
+                        daltonView.setImageBitmap(rotatedBitmap)
                     }
                 })
 
@@ -307,8 +332,12 @@ class MainActivity : AppCompatActivity() {
                 Executors.newSingleThreadExecutor(),
                 StripeAnalyzer { bitMap ->
 
+                    val matrix = Matrix()
+                    matrix.postRotate(stripeRotation.toFloat()) // 90도 회전
+                    val rotatedBitmap = Bitmap.createBitmap(bitMap!!, 0, 0, bitMap.width, bitMap.height, matrix, true)
+
                     runOnUiThread {
-                        stripeView.setImageBitmap(bitMap)
+                        stripeView.setImageBitmap(rotatedBitmap)
                     }
                 })
 
@@ -326,12 +355,11 @@ class MainActivity : AppCompatActivity() {
                 cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview,
 //                    imageCapture,
-//                    imageAnalyzerColorName,
-//                    imageAnalyzerDeleteAnotherColor,
-                    imageAnalyzerDaltonizer,
-                    imageAnalyzerStripe
+                    imageAnalyzerColorName,
+                    imageAnalyzerDeleteAnotherColor,
+//                    imageAnalyzerDaltonizer,
+//                    imageAnalyzerStripe
                 )
-
             } catch (exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }
@@ -353,10 +381,7 @@ class MainActivity : AppCompatActivity() {
         cameraExecutor.shutdown()
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String>, grantResults:
-        IntArray
-    ) {
+    override fun onRequestPermissionsResult( requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
@@ -393,14 +418,16 @@ class MainActivity : AppCompatActivity() {
     //RGBA_8888형식으로 RGBbitmap 만드는 함수
     private fun toRGB_Bitmap(image: ImageProxy): Bitmap? {
         val planes = image.planes
+
         val buffer = planes[0].buffer
         val pixelStride = planes[0].pixelStride
         val rowStride = planes[0].rowStride
+
         val rowPadding = rowStride - pixelStride * image.width
         val bitmap = Bitmap.createBitmap(
-            image.width + rowPadding / pixelStride,
-            image.height, Bitmap.Config.ARGB_8888
+            image.width + rowPadding / pixelStride, image.height, Bitmap.Config.ARGB_8888
         )
+        image.close()
         bitmap.copyPixelsFromBuffer(buffer)
         return bitmap
     }
@@ -436,7 +463,6 @@ class MainActivity : AppCompatActivity() {
                 colorCallback(RGBandY(R, G, B, A))
             }
         }
-
     }
 
     //-----------------------------------------------------------------------------------------------------
@@ -447,18 +473,19 @@ class MainActivity : AppCompatActivity() {
 
         override fun analyze(image: ImageProxy) {
             val rgbBitMap = toRGB_Bitmap(image) ?: return
+            coverRotation = image.imageInfo.rotationDegrees
             image.close()
 
-            deleteAnotherColorCallback(applyHueFilter(rgbBitMap!!, hueCriteria))
+            deleteAnotherColorCallback(coverFilter(rgbBitMap!!, hueCriteria))
 
 
         }
     }
 
     //from RGB bitmap to downgraded and covered bitmap, 표출 범위 hueCriteria-v ~ hueCriteria+v;
-    fun applyHueFilter(inputBitmap: Bitmap, hueCriteria: Float): Bitmap {
-        val width = inputBitmap.width / 3
-        val height = inputBitmap.height / 3
+    fun coverFilter(inputBitmap: Bitmap, hueCriteria: Float): Bitmap {
+        val width = inputBitmap.width  / 2
+        val height = inputBitmap.height / 2
 
         val scaledBitmap: Bitmap = Bitmap.createScaledBitmap(inputBitmap, width, height, true)
         val outputBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -496,6 +523,7 @@ class MainActivity : AppCompatActivity() {
         ImageAnalysis.Analyzer{
         override fun analyze(image: ImageProxy) {
             val rgbBitMap = toRGB_Bitmap(image) ?: return
+            daltonRotation = image.imageInfo.rotationDegrees
             image.close()
 
             daltonBitmapCallback(daltonFilter(rgbBitMap,blindType))
@@ -503,8 +531,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun daltonFilter(inputBitmap: Bitmap, blindType : Int): Bitmap {
-        val width = inputBitmap.width / 3
-        val height = inputBitmap.height / 3
+        val width = inputBitmap.width / 2
+        val height = inputBitmap.height / 2
 
         val scaledBitmap: Bitmap = Bitmap.createScaledBitmap(inputBitmap, width, height, true)
         val outputBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -556,7 +584,7 @@ class MainActivity : AppCompatActivity() {
 
         val scaledBitmap: Bitmap = Bitmap.createScaledBitmap(inputBitmap, width, height, true)
         val outputBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val v = 40
+        val v = 50
         val criteria = when (blindType){
             TYPE_NUM_PROTANOPIA -> 0
             TYPE_NUM_DEUTERANOPIA -> 120
@@ -576,8 +604,8 @@ class MainActivity : AppCompatActivity() {
 
 
                 // 색각이상별로 잘 안보이는 색상의 hue값에 검정 줄무늬 넣기
-                if ((abs(hue - criteria) <= v || abs(hue - (criteria + 360)) <= v || abs((hue + 360) - criteria) <= v) && sat > 0.30 && i%15 > 13 ) {
-                    val stripePoint = Color.rgb(10, 10, 10)
+                if ((abs(hue - criteria) <= v || abs(hue - (criteria + 360)) <= v || abs((hue + 360) - criteria) <= v) && sat > 0.30 && i%17 == 10 ) {
+                    val stripePoint = Color.rgb(50, 50, 50)
                     outputBitmap.setPixel(x, y, stripePoint) //중간중간 빗금을 위한 부분
                 } else {
                     outputBitmap.setPixel(x, y, pixel)

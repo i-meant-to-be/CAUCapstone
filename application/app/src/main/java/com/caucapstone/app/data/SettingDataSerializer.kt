@@ -2,24 +2,24 @@ package com.caucapstone.app.data
 
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.Serializer
-import com.caucapstone.app.SettingData
+import com.caucapstone.app.SettingProto
 import com.google.protobuf.InvalidProtocolBufferException
 import java.io.InputStream
 import java.io.OutputStream
 
-object SettingDataSerializer : Serializer<SettingData> {
-    override val defaultValue: SettingData
-        get() = SettingData.getDefaultInstance()
+object SettingProtoSerializer : Serializer<SettingProto> {
+    override val defaultValue: SettingProto
+        get() = SettingProto.getDefaultInstance()
 
-    override suspend fun readFrom(input: InputStream): SettingData {
+    override suspend fun readFrom(input: InputStream): SettingProto {
         try {
-            return SettingData.parseFrom(input)
+            return SettingProto.parseFrom(input)
         } catch (exception: InvalidProtocolBufferException) {
             throw CorruptionException("Cannot read proto.", exception)
         }
     }
 
-    override suspend fun writeTo(t: SettingData, output: OutputStream) {
+    override suspend fun writeTo(t: SettingProto, output: OutputStream) {
         t.writeTo(output)
     }
 }

@@ -3,6 +3,7 @@ buildscript {
     ext {
         compose_version = "1.4.0"
         hilt_version = "2.44"
+        room_version = "2.5.0"
     }
 
     dependencies {

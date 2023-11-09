@@ -7,4 +7,5 @@ message SettingProto {
   bool docMode = 1;
   bool removeGlare = 2;
   int32 colorSensitivity = 3;
+  int32 type = 4;
 }

@@ -1,4 +1,4 @@
-package com.caucapstone.app.data
+package com.caucapstone.app.data.proto
 
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.Serializer

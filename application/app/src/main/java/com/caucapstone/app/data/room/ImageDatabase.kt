@@ -7,6 +7,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
@@ -28,6 +29,7 @@ interface ImageDatabaseDao {
     suspend fun delete(image: Image)
 }
 
+@TypeConverters(Converters::class)
 @Database(entities = [Image::class], version = 1, exportSchema = false)
 abstract class ImageDatabase: RoomDatabase() {
     abstract fun imageDao(): ImageDatabaseDao

@@ -18,29 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.caucapstone.app.data.globalPaddingValue
 import com.caucapstone.app.R
 
-/*
-### Example codes
-
-val itemsList = (0..5).toList()
-val itemsIndexedList = listOf("A", "B", "C")
-
-val itemModifier = Modifier.border(1.dp, Color.Blue).height(80.dp).wrapContentSize()
-
-LazyVerticalGrid(
-    columns = GridCells.Fixed(3)
-) {
-    items(itemsList) {
-        Text("Item is $it", itemModifier)
-    }
-    item {
-        Text("Single item", itemModifier)
-    }
-    itemsIndexed(itemsIndexedList) { index, item ->
-        Text("Item at index $index is $item", itemModifier)
-    }
-}
- */
-
 @Composable
 fun FileView() {
     Box(

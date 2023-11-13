@@ -27,6 +27,9 @@ class MainActivity : ComponentActivity() {
             if (!Python.isStarted()) {
                 Python.start(AndroidPlatform(LocalContext.current as Activity))
             }
+            val py = Python.getInstance()
+            val module = py.getModule("integration_test")
+            val bytes = module.callAttr("test")
 
             AppTheme {
                 // A surface container using the 'background' color from the theme

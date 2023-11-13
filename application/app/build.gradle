@@ -23,12 +23,20 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
         // From here for Chaquopy
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
         }
         python {
+            def env = String.valueOf(System.getenv("Python38"))
+            buildPython env + "\\python.exe"
             version "3.8"
+
+            pip {
+                install "numpy"
+                install "opencv-python"
+            }
         }
     }
 

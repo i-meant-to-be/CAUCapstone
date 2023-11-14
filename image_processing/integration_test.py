@@ -5,7 +5,7 @@ import cv2 as cv
 #import matplotlib.pyplot as plt
 
 def test(imgstr, h, w):
-	imgarr = np.frombuffer(imgstr.encode(encoding='ascii'), dtype=uint8)
+	imgarr = np.frombuffer(imgstr.encode(encoding='ascii'), dtype=np.uint8)
 	img = imgarr.reshape((h,w,-1))
 	img = cv.cvtColor(img, cv.COLOR_RGB2BGR)
 	img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)

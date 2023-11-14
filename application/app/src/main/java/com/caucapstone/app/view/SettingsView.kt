@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -143,7 +144,6 @@ fun TextFieldSettingViewItem(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SliderSettingViewItem(
     itemName: String,
@@ -179,12 +179,46 @@ fun SliderSettingViewItem(
             )
             Row(
                 horizontalArrangement = Arrangement.End,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 5.dp)) {
                 Text(
                     "$itemValue",
                     style = MaterialTheme.typography.labelMedium
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun ButtonSettingViewItem(
+    itemName: String,
+    itemDescription: String = "",
+    onClick: () -> Unit,
+    isLastItem: Boolean = false
+) {
+    val screenWidth = LocalConfiguration.current.screenWidthDp
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = if (isLastItem) 0.dp else 25.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                itemName,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+            )
+            Box(modifier = Modifier.height(5.dp))
+            Text(
+                itemDescription,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Button(onClick = onClick) {
+                Text(itemName)
             }
         }
     }

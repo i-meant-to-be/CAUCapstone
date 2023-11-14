@@ -2,6 +2,9 @@ package com.caucapstone.app
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +16,7 @@ import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.HiltAndroidApp
+import java.io.ByteArrayOutputStream
 
 @HiltAndroidApp
 class MainApp : Application() {}
@@ -27,13 +31,28 @@ class MainActivity : ComponentActivity() {
             if (!Python.isStarted()) {
                 Python.start(AndroidPlatform(LocalContext.current as Activity))
             }
+
             val py = Python.getInstance()
             val module = py.getModule("integration_test")
 
-            AppTheme {
-                // A surface container using the 'background' color from the theme
-                MainView(MainViewModel())
+            // Drawable - Bitmap - ByteArray - String
+            val bitmap = BitmapFactory.decodeResource(applicationContext.resources, R.drawable.test)
+            val outputStream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
 
+            // String - ByteArray - Bitmap
+            val bitmapDestByteArray =
+                module.callAttr(
+                    "test",
+                    outputStream.toByteArray().toString(Charsets.UTF_8),
+                    1365, 2048)
+                    .toJava(ByteArray::class.java)
+
+            BitmapFactory.decodeByteArray(bitmapDestByteArray, 0, bitmapDestByteArray.size)
+
+
+            AppTheme {
+                MainView(MainViewModel())
             }
         }
     }

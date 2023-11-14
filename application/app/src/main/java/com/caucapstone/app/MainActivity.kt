@@ -29,7 +29,6 @@ class MainActivity : ComponentActivity() {
             }
             val py = Python.getInstance()
             val module = py.getModule("integration_test")
-            val bytes = module.callAttr("test")
 
             AppTheme {
                 // A surface container using the 'background' color from the theme

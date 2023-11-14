@@ -19,54 +19,55 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.caucapstone.app.SettingProto
 import com.caucapstone.app.data.globalPaddingValue
 import com.caucapstone.app.util.SettingItem
 import com.caucapstone.app.util.SettingType
+import com.caucapstone.app.viewmodel.SettingViewModel
+import kotlin.math.roundToInt
 
 @Composable
-fun SettingView() {
-    val items = listOf(
-        SettingItem.CVDocMode,
-        SettingItem.CVRemoveGlare,
-        SettingItem.CVColorSensitivity,
-    )
+fun SettingView(viewModel: SettingViewModel = hiltViewModel()) {
+    val data = viewModel.settingsFlow.collectAsState(initial = SettingProto.getDefaultInstance()).value
 
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(globalPaddingValue)
     ) {
-        itemsIndexed(items) { _, item ->
-            when (item.type) {
-                SettingType.BOOL -> SwitchSettingViewItem(
-                    stringResource(item.title),
-                    stringResource(item.explanation)
-                )
-                SettingType.UINT -> TextFieldSettingViewItem(
-                    stringResource(item.title),
-                    stringResource(item.explanation)
-                )
-                SettingType.INT -> TextFieldSettingViewItem(
-                    stringResource(item.title),
-                    stringResource(item.explanation)
-                )
-                else -> SwitchSettingViewItem(
-                    stringResource(item.title),
-                    stringResource(item.explanation)
-                )
-            }
-        }
+        SwitchSettingViewItem(
+            stringResource(SettingItem.CVDocMode.title),
+            stringResource(SettingItem.CVDocMode.explanation),
+            data.docMode,
+            viewModel::setDocMode
+        )
+        SwitchSettingViewItem(
+            stringResource(SettingItem.CVRemoveGlare.title),
+            stringResource(SettingItem.CVRemoveGlare.explanation),
+            data.removeGlare,
+            viewModel::setRemoveGlare
+        )
+        SliderSettingViewItem(
+            stringResource(SettingItem.CVColorSensitivity.title),
+            stringResource(SettingItem.CVColorSensitivity.explanation),
+            data.colorSensitivity,
+            viewModel::setColorSensitivity
+        )
     }
 }
 
@@ -74,28 +75,28 @@ fun SettingView() {
 fun SwitchSettingViewItem(
     itemName: String,
     itemDescription: String = "",
+    itemValue: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
     isLastItem: Boolean = false
 ) {
     val screenWidth = LocalConfiguration.current.screenWidthDp
-    val checked = remember { mutableStateOf(false) }
 
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = if (isLastItem) 0.dp else 20.dp)
+            .padding(bottom = if (isLastItem) 0.dp else 25.dp)
     ) {
-
         Column(modifier = Modifier.width((0.75 * screenWidth).dp)) {
-            Text(itemName, style = MaterialTheme.typography.titleLarge)
+            Text(itemName, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
             Box(modifier = Modifier.height(5.dp))
             Text(itemDescription, style = MaterialTheme.typography.bodyMedium)
         }
         Switch(
-            checked = checked.value,
-            onCheckedChange = { checked.value = !checked.value },
-            thumbContent = if (checked.value) {
+            checked = itemValue,
+            onCheckedChange = onCheckedChange,
+            thumbContent = if (itemValue) {
                 {
                     Icon(
                         imageVector = Icons.Filled.Check,
@@ -115,6 +116,8 @@ fun SwitchSettingViewItem(
 fun TextFieldSettingViewItem(
     itemName: String,
     itemDescription: String = "",
+    itemValue: Int,
+    onValueChanged: (Int) -> Unit,
     isLastItem: Boolean = false
 ) {
     val screenWidth = LocalConfiguration.current.screenWidthDp
@@ -125,11 +128,10 @@ fun TextFieldSettingViewItem(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = if (isLastItem) 0.dp else 20.dp)
+            .padding(bottom = if (isLastItem) 0.dp else 25.dp)
     ) {
-
         Column(modifier = Modifier.width((0.75 * screenWidth).dp)) {
-            Text(itemName, style = MaterialTheme.typography.titleLarge)
+            Text(itemName, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
             Box(modifier = Modifier.height(5.dp))
             Text(itemDescription, style = MaterialTheme.typography.bodyMedium)
         }
@@ -138,5 +140,52 @@ fun TextFieldSettingViewItem(
             shape = RoundedCornerShape(20.dp),
             onValueChange = { text.value = it }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SliderSettingViewItem(
+    itemName: String,
+    itemDescription: String = "",
+    itemValue: Int,
+    onValueChange: (Int) -> Unit,
+    isLastItem: Boolean = false
+) {
+    val screenWidth = LocalConfiguration.current.screenWidthDp
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = if (isLastItem) 0.dp else 25.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                itemName,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+            )
+            Box(modifier = Modifier.height(5.dp))
+            Text(
+                itemDescription,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Slider(
+                value = itemValue.toFloat(),
+                onValueChange = { onValueChange(it.roundToInt()) },
+                steps = 11,
+                valueRange = -5f..5f
+            )
+            Row(
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 5.dp)) {
+                Text(
+                    "$itemValue",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        }
     }
 }

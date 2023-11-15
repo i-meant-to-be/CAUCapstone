@@ -26,4 +26,9 @@ sealed class SettingItem(
         R.string.setting_option_expl_color_sensitivity,
         SettingType.INT
     )
+    object RCFilterType : SettingItem(
+        R.string.setting_option_name_filter_type,
+        R.string.setting_option_expl_filter_type,
+        SettingType.INT
+    )
 }

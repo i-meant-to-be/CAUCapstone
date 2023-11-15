@@ -3,6 +3,7 @@ package com.caucapstone.app.viewmodel
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.caucapstone.app.FilterType
 import com.caucapstone.app.SettingProto
 import com.caucapstone.app.data.proto.SettingProtoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +34,12 @@ class SettingViewModel @Inject constructor(
     fun setColorSensitivity(value: Int) {
         viewModelScope.launch {
             if (value >= -5 && value <= 5) settingProtoRepository.setColorSensitivity(value)
+        }
+    }
+
+    fun setFilterMode(value: FilterType) {
+        viewModelScope.launch {
+            settingProtoRepository.setFilterType(value)
         }
     }
 }

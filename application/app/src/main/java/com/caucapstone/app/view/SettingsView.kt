@@ -3,6 +3,7 @@ package com.caucapstone.app.view
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,16 +11,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -35,10 +36,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.caucapstone.app.FilterType
+import com.caucapstone.app.R
 import com.caucapstone.app.SettingProto
 import com.caucapstone.app.data.globalPaddingValue
 import com.caucapstone.app.util.SettingItem
-import com.caucapstone.app.util.SettingType
 import com.caucapstone.app.viewmodel.SettingViewModel
 import kotlin.math.roundToInt
 
@@ -67,8 +69,27 @@ fun SettingView(viewModel: SettingViewModel = hiltViewModel()) {
             stringResource(SettingItem.CVColorSensitivity.title),
             stringResource(SettingItem.CVColorSensitivity.explanation),
             data.colorSensitivity,
-            viewModel::setColorSensitivity
+            viewModel::setColorSensitivity,
+            9
         )
+        MenusSettingViewItem(
+            stringResource(SettingItem.RCFilterType.title),
+            stringResource(SettingItem.RCFilterType.explanation),
+            data.filterType.toString()
+        ) {
+            MenusItem(
+                stringResource(R.string.filter_name_none)
+            ) { viewModel.setFilterMode(FilterType.FILTER_NONE) }
+            MenusItem(
+                stringResource(R.string.filter_name_specific)
+            ) { viewModel.setFilterMode(FilterType.FILTER_SPECIFIC) }
+            MenusItem(
+                stringResource(R.string.filter_name_stripe)
+            ) { viewModel.setFilterMode(FilterType.FILTER_STRIPE) }
+            MenusItem(
+                stringResource(R.string.filter_name_daltonized)
+            ) { viewModel.setFilterMode(FilterType.FILTER_DALTONIZED) }
+        }
     }
 }
 
@@ -112,48 +133,15 @@ fun SwitchSettingViewItem(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TextFieldSettingViewItem(
-    itemName: String,
-    itemDescription: String = "",
-    itemValue: Int,
-    onValueChanged: (Int) -> Unit,
-    isLastItem: Boolean = false
-) {
-    val screenWidth = LocalConfiguration.current.screenWidthDp
-    val text = remember { mutableStateOf("") }
-
-    Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = if (isLastItem) 0.dp else 25.dp)
-    ) {
-        Column(modifier = Modifier.width((0.75 * screenWidth).dp)) {
-            Text(itemName, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-            Box(modifier = Modifier.height(5.dp))
-            Text(itemDescription, style = MaterialTheme.typography.bodyMedium)
-        }
-        OutlinedTextField(
-            value = text.value,
-            shape = RoundedCornerShape(20.dp),
-            onValueChange = { text.value = it }
-        )
-    }
-}
-
 @Composable
 fun SliderSettingViewItem(
     itemName: String,
     itemDescription: String = "",
     itemValue: Int,
     onValueChange: (Int) -> Unit,
+    steps: Int?,
     isLastItem: Boolean = false
 ) {
-    val screenWidth = LocalConfiguration.current.screenWidthDp
-
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -174,7 +162,7 @@ fun SliderSettingViewItem(
             Slider(
                 value = itemValue.toFloat(),
                 onValueChange = { onValueChange(it.roundToInt()) },
-                steps = 11,
+                steps = steps ?: 0,
                 valueRange = -5f..5f
             )
             Row(
@@ -184,7 +172,7 @@ fun SliderSettingViewItem(
                     .padding(horizontal = 5.dp)) {
                 Text(
                     "$itemValue",
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
         }
@@ -192,13 +180,14 @@ fun SliderSettingViewItem(
 }
 
 @Composable
-fun ButtonSettingViewItem(
+fun MenusSettingViewItem(
     itemName: String,
     itemDescription: String = "",
-    onClick: () -> Unit,
-    isLastItem: Boolean = false
+    buttonText: String,
+    isLastItem: Boolean = false,
+    content: @Composable (ColumnScope.() -> Unit)
 ) {
-    val screenWidth = LocalConfiguration.current.screenWidthDp
+    val expanded = remember { mutableStateOf(false) }
 
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -217,9 +206,31 @@ fun ButtonSettingViewItem(
                 itemDescription,
                 style = MaterialTheme.typography.bodyMedium
             )
-            Button(onClick = onClick) {
-                Text(itemName)
+            Box(modifier = Modifier.height(10.dp))
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { expanded.value = true }
+            ) {
+                Icon(Icons.Filled.FilterList, contentDescription = null)
+                Box(modifier = Modifier.width(10.dp))
+                Text(buttonText)
             }
+            DropdownMenu(
+                expanded = expanded.value,
+                onDismissRequest = { expanded.value = false },
+                content = content
+            )
         }
     }
+}
+
+@Composable
+fun MenusItem(
+    text: String,
+    onClick: () -> Unit
+) {
+    DropdownMenuItem(
+        text = { Text(text) },
+        onClick = onClick
+    )
 }

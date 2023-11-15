@@ -8,8 +8,14 @@
     <string name="setting_option_name_doc_mode">"문서 모드</string>
     <string name="setting_option_name_remove_glare">글레어 제거</string>
     <string name="setting_option_name_color_sensitivity">색 인식 민감도</string>
+    <string name="setting_option_name_filter_type">사용할 필터</string>
     <string name="setting_option_expl_doc_mode">도표나 기호, 도면 등을 보고 싶다면, 이 기능을 켜 이미지 분석을 향상해 주세요.</string>
     <string name="setting_option_expl_remove_glare">사진에 밝은 빛을 반사하는 물체가 있어 분석이 잘 안 된다면 이 기능을 켜 주세요.</string>
     <string name="setting_option_expl_color_sensitivity">분리가 잘 안 되는 색상이 있다면 민감도를 올리고, 너무 많이 분리된다면 내려주세요.</string>
+    <string name="setting_option_expl_filter_type">카메라 촬영 시 적용할 필터를 선택해주세요.</string>
 
+    <string name="filter_name_none">필터 없음</string>
+    <string name="filter_name_specific">특정 색상 강조 필터</string>
+    <string name="filter_name_stripe">줄무늬 필터</string>
+    <string name="filter_name_daltonized">색상 조정 필터</string>
 </resources>

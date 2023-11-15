@@ -3,6 +3,7 @@ package com.caucapstone.app.data.proto
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
+import com.caucapstone.app.FilterType
 import com.caucapstone.app.SettingProto
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -42,6 +43,15 @@ class SettingProtoRepository @Inject constructor(
             settingProto
                 .toBuilder()
                 .setColorSensitivity(value)
+                .build()
+        }
+    }
+
+    suspend fun setFilterType(value: FilterType) {
+        dataStore.updateData { settingProto ->
+            settingProto
+                .toBuilder()
+                .setFilterType(value)
                 .build()
         }
     }

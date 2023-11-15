@@ -32,25 +32,6 @@ class MainActivity : ComponentActivity() {
                 Python.start(AndroidPlatform(LocalContext.current as Activity))
             }
 
-            val py = Python.getInstance()
-            val module = py.getModule("integration_test")
-
-            // Drawable - Bitmap - ByteArray - String
-            val bitmap = BitmapFactory.decodeResource(applicationContext.resources, R.drawable.test)
-            val outputStream = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-
-            // String - ByteArray - Bitmap
-            val bitmapDestByteArray =
-                module.callAttr(
-                    "test",
-                    outputStream.toByteArray().toString(Charsets.UTF_8),
-                    1365, 2048)
-                    .toJava(ByteArray::class.java)
-
-            BitmapFactory.decodeByteArray(bitmapDestByteArray, 0, bitmapDestByteArray.size)
-
-
             AppTheme {
                 MainView(MainViewModel())
             }

@@ -3,9 +3,16 @@ syntax = "proto3";
 option java_package = "com.caucapstone.app";
 option java_multiple_files = true;
 
+enum FilterType {
+  FILTER_NONE = 0;
+  FILTER_SPECIFIC = 1;
+  FILTER_DALTONIZED = 2;
+  FILTER_STRIPE = 3;
+}
+
 message SettingProto {
   bool docMode = 1;
   bool removeGlare = 2;
   int32 colorSensitivity = 3;
-  int32 type = 4;
+  FilterType filterType = 4;
 }

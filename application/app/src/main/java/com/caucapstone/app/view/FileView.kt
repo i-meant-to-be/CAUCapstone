@@ -109,7 +109,7 @@ fun ImageItemCard(
             .fillMaxWidth()
             .height(150.dp)
             .padding(bottom = if (isLastItem) 0.dp else 25.dp)
-            .clickable {}
+            .clickable { clickable() }
     ) {
         Column(
             verticalArrangement = Arrangement.Bottom,

@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @Entity(tableName = "image_table")
-data class Image  constructor(
+data class Image(
     @PrimaryKey
     val id: UUID = UUID.randomUUID(),
 

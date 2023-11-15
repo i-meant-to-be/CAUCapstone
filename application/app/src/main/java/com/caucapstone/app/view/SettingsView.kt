@@ -14,14 +14,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -29,8 +27,6 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -43,7 +39,6 @@ import com.caucapstone.app.FilterType
 import com.caucapstone.app.R
 import com.caucapstone.app.SettingProto
 import com.caucapstone.app.data.globalPaddingValue
-import com.caucapstone.app.util.SettingItem
 import com.caucapstone.app.viewmodel.SettingViewModel
 import kotlin.math.roundToInt
 
@@ -293,8 +288,9 @@ fun FilterTypeSettingItem(
     content: @Composable (ColumnScope.() -> Unit)
 ) {
     SettingItemMultipleLineBackground(
-        stringResource(R.string.setting_option_name_color_sensitivity),
-        stringResource(R.string.setting_option_expl_color_sensitivity)
+        stringResource(R.string.setting_option_name_filter_type),
+        stringResource(R.string.setting_option_expl_filter_type),
+        true
     ) {
         Button(
             modifier = Modifier.fillMaxWidth(),

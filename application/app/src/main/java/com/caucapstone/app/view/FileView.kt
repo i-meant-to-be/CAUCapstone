@@ -67,7 +67,7 @@ fun FileView(viewModel: FileViewModel = hiltViewModel()) {
             .fillMaxSize()
             .padding(start = globalPaddingValue, end = globalPaddingValue)
     ) {
-        Image(viewModel.bitmap.asImageBitmap(), null)
+        // Image(viewModel.bitmap.asImageBitmap(), null)
         LazyColumn() {
             items(5) { item ->
                 if (item == 0) Box(modifier = Modifier.height(25.dp)) else null
@@ -116,7 +116,7 @@ fun ImageItemCard(
             horizontalAlignment = Alignment.End,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(10.dp)
+                .padding(15.dp)
         ) {
             Text(
                 "Caption",

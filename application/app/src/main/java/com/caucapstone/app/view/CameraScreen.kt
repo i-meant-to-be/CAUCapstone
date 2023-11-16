@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import com.caucapstone.app.data.globalPaddingValue
 
 @Composable
-fun CameraView() {
+fun CameraScreen() {
     Box(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier

@@ -43,7 +43,7 @@ import com.caucapstone.app.viewmodel.SettingViewModel
 import kotlin.math.roundToInt
 
 @Composable
-fun SettingView(viewModel: SettingViewModel = hiltViewModel()) {
+fun SettingScreen(viewModel: SettingViewModel = hiltViewModel()) {
     val data = viewModel.settingsFlow.collectAsState(initial = SettingProto.getDefaultInstance()).value
 
     Column(

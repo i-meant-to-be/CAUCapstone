@@ -2,21 +2,16 @@ package com.caucapstone.app
 
 import android.app.Activity
 import android.app.Application
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.ui.platform.LocalContext
 import com.caucapstone.app.ui.theme.AppTheme
-import com.caucapstone.app.view.MainView
-import com.caucapstone.app.viewmodel.MainViewModel
+import com.caucapstone.app.util.NestedNav
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.HiltAndroidApp
-import java.io.ByteArrayOutputStream
 
 @HiltAndroidApp
 class MainApp : Application() {}
@@ -33,7 +28,8 @@ class MainActivity : ComponentActivity() {
             }
 
             AppTheme {
-                MainView(MainViewModel())
+                // MainView(MainViewModel())
+                NestedNav()
             }
         }
     }

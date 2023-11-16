@@ -25,7 +25,7 @@ import com.caucapstone.app.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainView(viewModel: MainViewModel = hiltViewModel()) {
+fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
     val navController = rememberNavController()
 
     Scaffold(bottomBar = { BottomBar(navController, viewModel) }) {
@@ -79,8 +79,8 @@ fun MainNavContainer(navController: NavHostController) {
         startDestination = "/file",
         modifier = Modifier.fillMaxSize()
     ) {
-        composable("/camera") { CameraView() }
-        composable("/file") { FileView() }
-        composable("/setting") { SettingView() }
+        composable("/camera") { CameraScreen() }
+        composable("/file") { FileScreen() }
+        composable("/setting") { SettingScreen() }
     }
 }

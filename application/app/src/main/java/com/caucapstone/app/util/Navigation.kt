@@ -9,9 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.caucapstone.app.R
+import com.caucapstone.app.view.MainScreen
+import com.caucapstone.app.view.SplashScreen
 
 sealed class NavItem(
     val title: Int,
@@ -27,16 +28,16 @@ sealed class NavItem(
 sealed class NestedNavItem(
     val route: String
 ) {
-    object SplashScreen : NestedNavItem("/Splash")
-    object DevScreen : NestedNavItem("/Dev")
-    object CameraShootScreen : NestedNavItem("/CameraView")
-    object ImageViewScreen : NestedNavItem("/ImageView")
-    object ImageAddScreen : NestedNavItem("/ImageAdd")
+    object SplashScreenItem : NestedNavItem("/Splash")
+    object DevScreenItem : NestedNavItem("/Dev")
+    object CameraViewScreenItem : NestedNavItem("/CameraView")
+    object ImageViewScreenItem : NestedNavItem("/ImageView")
+    object ImageAddScreenItem : NestedNavItem("/ImageAdd")
 
-    object MainScreen : NestedNavItem("/Main") {
-        object CameraScreen : NestedNavItem("/Main/Camera")
-        object FileScreen : NestedNavItem("/Main/File")
-        object SettingScreen : NestedNavItem("/Main/Setting")
+    object MainScreenItem : NestedNavItem("/Main") {
+        object CameraScreenItem : NestedNavItem("/Main/Camera")
+        object FileScreenItem : NestedNavItem("/Main/File")
+        object SettingScreenItem : NestedNavItem("/Main/Setting")
     }
 }
 
@@ -46,20 +47,15 @@ fun NestedNav() {
 
     NavHost(
         navController = navHostController,
-        startDestination = NestedNavItem.SplashScreen.route
+        startDestination = NestedNavItem.SplashScreenItem.route
     ) {
-        composable(NestedNavItem.SplashScreen.route) {}
-        composable(NestedNavItem.DevScreen.route) {}
-        composable(NestedNavItem.CameraShootScreen.route) {}
-        composable(NestedNavItem.ImageViewScreen.route) {}
-        composable(NestedNavItem.ImageAddScreen.route) {}
-        navigation(
-            route = NestedNavItem.MainScreen.route,
-            startDestination = NestedNavItem.MainScreen.CameraScreen.route
-        ) {
-            composable(NestedNavItem.MainScreen.CameraScreen.route) {}
-            composable(NestedNavItem.MainScreen.FileScreen.route) {}
-            composable(NestedNavItem.MainScreen.SettingScreen.route) {}
+        composable(NestedNavItem.SplashScreenItem.route) {
+            SplashScreen { navHostController.navigate(NestedNavItem.MainScreenItem.route) }
         }
+        composable(NestedNavItem.DevScreenItem.route) {}
+        composable(NestedNavItem.CameraViewScreenItem.route) {}
+        composable(NestedNavItem.ImageViewScreenItem.route) {}
+        composable(NestedNavItem.ImageAddScreenItem.route) {}
+        composable(NestedNavItem.MainScreenItem.route) { MainScreen() }
     }
 }

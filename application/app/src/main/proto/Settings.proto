@@ -14,5 +14,5 @@ message SettingProto {
   bool docMode = 1;
   bool removeGlare = 2;
   int32 colorSensitivity = 3;
-  FilterType filterType = 4;
+  FilterType defaultFilterType = 4;
 }

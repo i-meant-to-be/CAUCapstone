@@ -7,7 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.ui.platform.LocalContext
 import com.caucapstone.app.ui.theme.AppTheme
-import com.caucapstone.app.util.NestedNav
+import com.caucapstone.app.util.Root
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
 
             AppTheme {
                 // MainView(MainViewModel())
-                NestedNav()
+                Root()
             }
         }
     }

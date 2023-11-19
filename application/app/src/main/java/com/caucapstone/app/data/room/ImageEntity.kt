@@ -1,12 +1,11 @@
 package com.caucapstone.app.data.room
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.net.Uri
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 @Entity(tableName = "image_table")
 data class Image(
@@ -16,6 +15,9 @@ data class Image(
     @ColumnInfo(name = "image_caption")
     val caption: String,
 
-    @ColumnInfo(name = "image_localdatetime")
+    @ColumnInfo(name = "image_uri")
+    val uri: Uri,
+
+    @ColumnInfo(name = "image_local_date_time")
     val localDateTime: LocalDateTime = LocalDateTime.now()
 )

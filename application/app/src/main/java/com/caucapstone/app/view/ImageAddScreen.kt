@@ -1,29 +1,153 @@
 package com.caucapstone.app.view
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ImageNotSupported
+import androidx.compose.material.icons.filled.ImageSearch
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
+import com.caucapstone.app.R
+import com.caucapstone.app.viewmodel.ImageAddViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImageAddScreen() {
+fun ImageAddScreen(
+    onNavigate: () -> Unit,
+    viewModel: ImageAddViewModel = hiltViewModel()
+) {
+    val scrollState = rememberScrollState()
+    val imageUri = remember { mutableStateOf<Uri?>(null) }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> imageUri.value = uri }
+    )
+
     Scaffold(
-        topBar = { UniversalTopAppBar(title = { /*TODO*/ }) {
-            
-        } }
+        topBar = {
+            UniversalTopAppBar(
+                title = { Text(stringResource(R.string.screen_name_image_add)) },
+                onClick = onNavigate,
+                actions = {
+                    IconButton(onClick = {
+                        if (imageUri.value != null) {
+                            viewModel.addImageToDatabase(
+                                viewModel.caption.value,
+                                imageUri.value!!
+                            )
+                            onNavigate()
+                        } else {
+                            onNavigate()
+                        }
+                    }) {
+                        Icon(Icons.Filled.Add, null)
+                    }
+                }
+            )
+        },
+        modifier = Modifier.fillMaxSize()
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = it.calculateBottomPadding()),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(it),
+            contentAlignment = Alignment.TopStart
         ) {
+            Column(
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 15.dp)
+                    .verticalScroll(scrollState)
+            ) {
+                // Image loading area
+                if (imageUri.value == null) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(shape = RoundedCornerShape(15.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ImageNotSupported,
+                            contentDescription = null,
+                            modifier = Modifier.size(100.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    Image(
+                        painter = rememberAsyncImagePainter(imageUri.value),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 200.dp, max = 500.dp)
+                            .clip(shape = RoundedCornerShape(15.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    )
+                }
+                Box(modifier = Modifier.height(15.dp))
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { launcher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    ) }
+                ) {
+                    Icon(Icons.Filled.ImageSearch, contentDescription = null)
+                    Box(modifier = Modifier.width(10.dp))
+                    Text(stringResource(R.string.indicator_find_image_button))
+                }
+                Box(modifier = Modifier.height(25.dp))
 
+                // Text field area
+                OutlinedTextField(
+                    value = viewModel.caption.value,
+                    onValueChange = { newValue -> viewModel.setCaption(newValue) },
+                    label = { Text(stringResource(R.string.indicator_image_caption)) },
+                    singleLine = true,
+                    enabled = true,
+                    maxLines = 1,
+                    shape = RoundedCornerShape(15.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

@@ -47,11 +47,11 @@ class SettingProtoRepository @Inject constructor(
         }
     }
 
-    suspend fun setFilterType(value: FilterType) {
+    suspend fun setDefaultFilterType(value: FilterType) {
         dataStore.updateData { settingProto ->
             settingProto
                 .toBuilder()
-                .setFilterType(value)
+                .setDefaultFilterType(value)
                 .build()
         }
     }

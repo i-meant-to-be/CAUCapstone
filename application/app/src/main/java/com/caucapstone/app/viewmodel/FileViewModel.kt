@@ -8,25 +8,30 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.caucapstone.app.R
 import com.caucapstone.app.data.room.DatabaseModule
+import com.caucapstone.app.data.room.Image
 import com.chaquo.python.PyException
 import com.chaquo.python.Python
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
 @HiltViewModel
 class FileViewModel @Inject constructor(
-    private val application: Application
+    application: Application
 ) : ViewModel() {
     private val _py = Python.getInstance()
     private val _output = mutableStateOf("")
     private val _bitmap: Bitmap = BitmapFactory.decodeResource(application.applicationContext.resources, R.drawable.test)
+    private val _databaseDao = DatabaseModule
+        .provideAppDatabase(application.applicationContext)
+        .imageDao()
     val output: State<String> = _output
     val bitmap: Bitmap = _bitmap
 
-    val databaseDao = DatabaseModule
-        .provideAppDatabase(application.applicationContext)
-        .imageDao()
+    fun getImages(): Flow<List<Image>> {
+        return _databaseDao.getImages()
+    }
 
     fun testFunc() {
         val module = this._py.getModule("integration_test")

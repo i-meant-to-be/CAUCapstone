@@ -16,9 +16,9 @@ import javax.inject.Inject
 class SettingViewModel @Inject constructor(
     private val settingProtoRepository: SettingProtoRepository
 ) : ViewModel() {
-    private val _settingsFlow = settingProtoRepository.flow
+    private val _settingFlow = settingProtoRepository.flow
     private val _filterTypeExpanded = mutableStateOf(false)
-    val settingsFlow: Flow<SettingProto> = _settingsFlow
+    val settingFlow: Flow<SettingProto> = _settingFlow
     val filterTypeExpanded: MutableState<Boolean> = _filterTypeExpanded
 
     // Write
@@ -37,9 +37,9 @@ class SettingViewModel @Inject constructor(
             if (value >= -5 && value <= 5) settingProtoRepository.setColorSensitivity(value)
         }
     }
-    fun setFilterMode(value: FilterType) {
+    fun setDefaultFilterType(value: FilterType) {
         viewModelScope.launch {
-            settingProtoRepository.setFilterType(value)
+            settingProtoRepository.setDefaultFilterType(value)
         }
     }
 }

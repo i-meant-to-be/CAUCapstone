@@ -44,7 +44,7 @@ import kotlin.math.roundToInt
 
 @Composable
 fun SettingScreen(viewModel: SettingViewModel = hiltViewModel()) {
-    val data = viewModel.settingsFlow.collectAsState(initial = SettingProto.getDefaultInstance()).value
+    val data = viewModel.settingFlow.collectAsState(initial = SettingProto.getDefaultInstance()).value
 
     Column(
         modifier = Modifier
@@ -68,7 +68,7 @@ fun SettingScreen(viewModel: SettingViewModel = hiltViewModel()) {
         FilterTypeSettingItem(
             onClick = { viewModel.filterTypeExpanded.value = true },
             buttonText = {
-                val text = when (data.filterType) {
+                val text = when (data.defaultFilterType) {
                     FilterType.FILTER_NONE -> stringResource(R.string.filter_name_none)
                     FilterType.FILTER_SPECIFIC -> stringResource(R.string.filter_name_specific)
                     FilterType.FILTER_DALTONIZED -> stringResource(R.string.filter_name_daltonized)
@@ -83,28 +83,28 @@ fun SettingScreen(viewModel: SettingViewModel = hiltViewModel()) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.filter_name_none)) },
                 onClick = {
-                    viewModel.setFilterMode(FilterType.FILTER_NONE)
+                    viewModel.setDefaultFilterType(FilterType.FILTER_NONE)
                     viewModel.filterTypeExpanded.value = false
                 }
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.filter_name_specific)) },
                 onClick = {
-                    viewModel.setFilterMode(FilterType.FILTER_SPECIFIC)
+                    viewModel.setDefaultFilterType(FilterType.FILTER_SPECIFIC)
                     viewModel.filterTypeExpanded.value = false
                 }
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.filter_name_stripe)) },
                 onClick = {
-                    viewModel.setFilterMode(FilterType.FILTER_STRIPE)
+                    viewModel.setDefaultFilterType(FilterType.FILTER_STRIPE)
                     viewModel.filterTypeExpanded.value = false
                 }
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.filter_name_daltonized)) },
                 onClick = {
-                    viewModel.setFilterMode(FilterType.FILTER_DALTONIZED)
+                    viewModel.setDefaultFilterType(FilterType.FILTER_DALTONIZED)
                     viewModel.filterTypeExpanded.value = false
                 }
             )

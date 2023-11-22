@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
+import java.util.UUID
 import javax.inject.Inject
 
 @Dao
@@ -27,6 +28,9 @@ interface ImageDatabaseDao {
 
     @Delete
     suspend fun delete(image: Image)
+
+    @Query("SELECT * from image_table WHERE image_id = :uuid")
+    fun isUUIDExists(uuid: UUID): Flow<List<Image>>
 }
 
 @TypeConverters(Converters::class)
@@ -41,4 +45,5 @@ class ImageRepository @Inject constructor(private val imageDatabaseDao: ImageDat
     suspend fun insert(image: Image) = imageDatabaseDao.insert(image)
     suspend fun deleteAll() = imageDatabaseDao.deleteAll()
     suspend fun delete(image: Image) = imageDatabaseDao.delete(image)
+    fun isUUIDExists(uuid: UUID) = imageDatabaseDao.isUUIDExists(uuid)
 }

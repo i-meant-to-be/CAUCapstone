@@ -1,8 +1,8 @@
 package com.caucapstone.app.view
 
+import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,12 +37,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.caucapstone.app.R
 import com.caucapstone.app.viewmodel.ImageAddViewModel
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,12 +52,20 @@ fun ImageAddScreen(
     onNavigate: () -> Unit,
     viewModel: ImageAddViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
     val imageUri = remember { mutableStateOf<Uri?>(null) }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri -> imageUri.value = uri }
+    )
+        /*
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri -> imageUri.value = uri }
     )
+
+         */
 
     Scaffold(
         topBar = {
@@ -65,9 +75,15 @@ fun ImageAddScreen(
                 actions = {
                     IconButton(onClick = {
                         if (imageUri.value != null) {
+                            val uuid = viewModel.getUUID()
+                            saveImageToInternalStorage(
+                                context = context,
+                                uri = imageUri.value!!,
+                                uuid = uuid
+                            )
                             viewModel.addImageToDatabase(
-                                viewModel.caption.value,
-                                imageUri.value!!
+                                id = uuid,
+                                caption = viewModel.caption.value
                             )
                             onNavigate()
                         } else {
@@ -126,9 +142,8 @@ fun ImageAddScreen(
                 Box(modifier = Modifier.height(15.dp))
                 Button(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { launcher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    ) }
+                    //PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    onClick = { launcher.launch("image/*") }
                 ) {
                     Icon(Icons.Filled.ImageSearch, contentDescription = null)
                     Box(modifier = Modifier.width(10.dp))
@@ -152,3 +167,16 @@ fun ImageAddScreen(
     }
 }
 
+fun saveImageToInternalStorage(
+    context: Context,
+    uri: Uri,
+    uuid: UUID
+) {
+    val inputStream = context.contentResolver.openInputStream(uri)
+    val outputStream = context.openFileOutput("${uuid.toString()}.jpg", Context.MODE_PRIVATE)
+    inputStream?.use { input ->
+        outputStream.use { output ->
+            input.copyTo(output)
+        }
+    }
+}

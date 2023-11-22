@@ -87,6 +87,7 @@ fun CameraScreen() {
             // 카메라 촬영 시의 작업을 여기서 구현 (onButtonClick)
             onButtonClick = {}
         )
+        CameraBody()
     }
 }
 
@@ -233,4 +234,9 @@ fun ReducibleRadioButton(
         )
         if (value) Text(label)
     }
+}
+
+@Composable
+fun CameraBody() {
+    
 }

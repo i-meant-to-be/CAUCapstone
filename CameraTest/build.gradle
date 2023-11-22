@@ -1,4 +1,11 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    dependencies {
+        // Android Studio 버전에 맞추어 변경 (Android Studio Giraffe는 8.1.4)
+        classpath 'com.android.tools.build:gradle:8.1.4'
+    }
+}
+
 plugins {
     id 'com.android.application' version '8.1.4' apply false
     id 'org.jetbrains.kotlin.android' version '1.8.10' apply false

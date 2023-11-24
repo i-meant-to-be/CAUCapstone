@@ -2,12 +2,12 @@ package com.caucapstone.app.data.room
 
 import androidx.room.Dao
 import androidx.room.Database
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.Update
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
@@ -26,8 +26,11 @@ interface ImageDatabaseDao {
     @Query("DELETE from image_table")
     suspend fun deleteAll()
 
-    @Delete
-    suspend fun delete(image: Image)
+    @Query("DELETE from image_table WHERE image_id = :id")
+    suspend fun deleteById(id: String)
+
+    @Update
+    suspend fun update(image: Image)
 
     @Query("SELECT * from image_table WHERE image_id = :uuid")
     fun isUUIDExists(uuid: UUID): Flow<List<Image>>
@@ -44,6 +47,7 @@ class ImageRepository @Inject constructor(private val imageDatabaseDao: ImageDat
 
     suspend fun insert(image: Image) = imageDatabaseDao.insert(image)
     suspend fun deleteAll() = imageDatabaseDao.deleteAll()
-    suspend fun delete(image: Image) = imageDatabaseDao.delete(image)
+    suspend fun deleteById(id: String) = imageDatabaseDao.deleteById(id)
+    suspend fun update(image: Image) = imageDatabaseDao.update(image)
     fun isUUIDExists(uuid: UUID) = imageDatabaseDao.isUUIDExists(uuid)
 }

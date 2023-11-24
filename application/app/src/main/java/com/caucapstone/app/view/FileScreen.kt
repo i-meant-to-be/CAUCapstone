@@ -2,6 +2,7 @@ package com.caucapstone.app.view
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import coil.request.ImageRequest
 import com.caucapstone.app.R
 import com.caucapstone.app.data.globalPaddingValue
 import com.caucapstone.app.data.room.Image
+import com.caucapstone.app.data.roundedCornerShapeValue
 import com.caucapstone.app.util.NestedNavItem
 import com.caucapstone.app.viewmodel.FileViewModel
 import java.time.format.DateTimeFormatter
@@ -69,7 +71,10 @@ fun FileScreen(
             LazyColumn() {
                 itemsIndexed(items) { index, item ->
                     if (index == 0) Box(modifier = Modifier.height(25.dp))
-                    ImageItemCard(item, {}, index == items.size)
+                    ImageItemCard(
+                        item,
+                        { onNavigate("${NestedNavItem.ImageViewScreenItem.route}/${item.id}") },
+                        index == items.size)
                 }
             }
         }
@@ -100,7 +105,7 @@ fun FileScreen(
 @Composable
 fun ImageItemCard(
     image: Image,
-    clickable: () -> Unit,
+    clickable: (String) -> Unit,
     isLastItem: Boolean = false
 ) {
     val context = LocalContext.current
@@ -111,18 +116,20 @@ fun ImageItemCard(
             .build()
     )
 
-    Column() {
+    Box(modifier = Modifier.padding(bottom = if (isLastItem) 0.dp else 15.dp)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(150.dp)
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(roundedCornerShapeValue))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable { clickable(image.id.toString()) }
         ) {
             Image(
                 painter = painter,
                 contentDescription = null,
-                contentScale = ContentScale.FillWidth
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier.fillMaxWidth()
             )
             Column(
                 verticalArrangement = Arrangement.Bottom,
@@ -141,38 +148,5 @@ fun ImageItemCard(
                 )
             }
         }
-        /*
-        Card(
-            // colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
-            modifier = Modifier
-                .paint(
-                    painter = painter,
-                    contentScale = ContentScale.FillWidth
-                )
-                .fillMaxWidth()
-                .height(150.dp)
-                .padding(bottom = if (isLastItem) 0.dp else 25.dp)
-                .clickable { clickable() }
-        ) {
-            Column(
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(15.dp)
-            ) {
-                Text(
-                    image.caption,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
-                Text(
-                    image.localDateTime.format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)),
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-        }
-
-         */
-        if (!isLastItem) Box(modifier = Modifier.height(25.dp))
     }
 }

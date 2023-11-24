@@ -2,10 +2,13 @@ package com.caucapstone.app.util
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.caucapstone.app.view.ImageAddScreen
+import com.caucapstone.app.view.ImageViewScreen
 import com.caucapstone.app.view.MainScreen
 import com.caucapstone.app.view.SplashScreen
 
@@ -39,12 +42,25 @@ fun Root() {
         }
         composable(NestedNavItem.DevScreenItem.route) {}
         composable(NestedNavItem.CameraViewScreenItem.route) {}
-        composable(NestedNavItem.ImageViewScreenItem.route) {}
+        composable(
+            route = "${NestedNavItem.ImageViewScreenItem.route}/{imageId}",
+            arguments = listOf(
+                navArgument("imageId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { entry ->
+            val imageId = entry.arguments?.getString("imageId")
+            ImageViewScreen(
+                onNavigate = {navHostController.navigateBack()},
+                imageId = imageId ?: ""
+            )
+        }
         composable(NestedNavItem.ImageAddScreenItem.route) {
             ImageAddScreen({ navHostController.navigateBack() })
         }
         composable(NestedNavItem.MainScreenItem.route) {
-            MainScreen({ route -> navHostController.navigate((route)) })
+            MainScreen({ route -> navHostController.navigate(route) })
         }
     }
 }

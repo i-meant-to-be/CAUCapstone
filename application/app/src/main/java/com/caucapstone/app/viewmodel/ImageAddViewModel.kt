@@ -1,8 +1,6 @@
 package com.caucapstone.app.viewmodel
 
 import android.app.Application
-import android.content.Context
-import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -11,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.caucapstone.app.data.room.DatabaseModule
 import com.caucapstone.app.data.room.Image
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -26,14 +23,14 @@ class ImageAddViewModel @Inject constructor(
         .imageDao()
     val caption: State<String> = _caption
 
-    fun getUUID(): UUID {
+    fun getUUID(): String {
         val isExists = MutableLiveData<Boolean>(true)
         var uuid = UUID.randomUUID()
 
         viewModelScope.launch {
             while (true) {
-                val queryResult = _databaseDao.isUUIDExists(uuid)
-                if (queryResult.count() == 0) {
+                val queryResult = _databaseDao.isUUIDExists(uuid.toString())
+                if (queryResult.isEmpty()) {
                     isExists.value = false
                     break
                 } else {
@@ -43,13 +40,13 @@ class ImageAddViewModel @Inject constructor(
             }
         }
 
-        return uuid
+        return uuid.toString()
     }
     fun setCaption(value: String) {
         _caption.value = value
     }
     fun addImageToDatabase(
-        id: UUID,
+        id: String,
         caption: String
     ) {
         viewModelScope.launch {

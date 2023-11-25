@@ -25,6 +25,7 @@ object DatabaseModule {
             ImageDatabase::class.java,
             "image_database"
         )
+        .allowMainThreadQueries()
         .fallbackToDestructiveMigration()
         .build()
 }

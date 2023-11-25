@@ -10,7 +10,7 @@ import java.util.UUID
 data class Image(
     @PrimaryKey
     @ColumnInfo(name = "image_id")
-    val id: UUID = UUID.randomUUID(),
+    val id: String = UUID.randomUUID().toString(),
 
     @ColumnInfo(name = "image_caption")
     val caption: String,

@@ -24,7 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,14 +43,14 @@ import com.caucapstone.app.util.NestedNavItem
 import com.caucapstone.app.viewmodel.FileViewModel
 import java.time.format.DateTimeFormatter
 
-private const val DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+private const val DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss"
 
 @Composable
 fun FileScreen(
     onNavigate: (String) -> Unit,
     viewModel: FileViewModel = hiltViewModel()
 ) {
-    val items = viewModel.getImages().collectAsState(emptyList()).value
+    val items = viewModel.getImages()
 
     // Normal layer
     Column(
@@ -64,7 +63,7 @@ fun FileScreen(
         if (items.isEmpty()) {
             UniversalIndicator(
                 Icons.Filled.ErrorOutline,
-                stringResource(R.string.indicator_no_image)
+                stringResource(R.string.string_no_image)
             )
         }
         else {
@@ -109,7 +108,7 @@ fun ImageItemCard(
     isLastItem: Boolean = false
 ) {
     val context = LocalContext.current
-    val path = "${context.filesDir.toString()}/${image.id.toString()}.jpg"
+    val path = "${context.filesDir}/${image.id}.jpg"
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
             .data(path)
@@ -123,7 +122,7 @@ fun ImageItemCard(
                 .height(150.dp)
                 .clip(RoundedCornerShape(roundedCornerShapeValue))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { clickable(image.id.toString()) }
+                .clickable { clickable(image.id) }
         ) {
             Image(
                 painter = painter,

@@ -44,12 +44,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.caucapstone.app.R
 import com.caucapstone.app.viewmodel.ImageAddViewModel
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageAddScreen(
-    onNavigate: () -> Unit,
+    onNavigateBack: () -> Unit,
     viewModel: ImageAddViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -59,35 +58,28 @@ fun ImageAddScreen(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri -> imageUri.value = uri }
     )
-        /*
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri -> imageUri.value = uri }
-    )
-
-         */
 
     Scaffold(
         topBar = {
             UniversalTopAppBar(
                 title = { Text(stringResource(R.string.screen_name_image_add)) },
-                onClick = onNavigate,
+                onClick = onNavigateBack,
                 actions = {
                     IconButton(onClick = {
                         if (imageUri.value != null) {
-                            val uuid = viewModel.getUUID()
+                            val id = viewModel.getUUID()
                             saveImageToInternalStorage(
                                 context = context,
                                 uri = imageUri.value!!,
-                                uuid = uuid
+                                id = id
                             )
                             viewModel.addImageToDatabase(
-                                id = uuid,
+                                id = id,
                                 caption = viewModel.caption.value
                             )
-                            onNavigate()
+                            onNavigateBack()
                         } else {
-                            onNavigate()
+                            onNavigateBack()
                         }
                     }) {
                         Icon(Icons.Filled.Add, null)
@@ -147,7 +139,7 @@ fun ImageAddScreen(
                 ) {
                     Icon(Icons.Filled.ImageSearch, contentDescription = null)
                     Box(modifier = Modifier.width(10.dp))
-                    Text(stringResource(R.string.indicator_find_image_button))
+                    Text(stringResource(R.string.string_find_image_button))
                 }
                 Box(modifier = Modifier.height(25.dp))
 
@@ -155,7 +147,7 @@ fun ImageAddScreen(
                 OutlinedTextField(
                     value = viewModel.caption.value,
                     onValueChange = { newValue -> viewModel.setCaption(newValue) },
-                    label = { Text(stringResource(R.string.indicator_image_caption)) },
+                    label = { Text(stringResource(R.string.string_image_caption)) },
                     singleLine = true,
                     enabled = true,
                     maxLines = 1,
@@ -170,10 +162,10 @@ fun ImageAddScreen(
 fun saveImageToInternalStorage(
     context: Context,
     uri: Uri,
-    uuid: UUID
+    id: String
 ) {
     val inputStream = context.contentResolver.openInputStream(uri)
-    val outputStream = context.openFileOutput("${uuid.toString()}.jpg", Context.MODE_PRIVATE)
+    val outputStream = context.openFileOutput("${id}.jpg", Context.MODE_PRIVATE)
     inputStream?.use { input ->
         outputStream.use { output ->
             input.copyTo(output)

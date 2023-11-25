@@ -12,7 +12,6 @@ import com.caucapstone.app.data.room.Image
 import com.chaquo.python.PyException
 import com.chaquo.python.Python
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
@@ -29,7 +28,7 @@ class FileViewModel @Inject constructor(
     val output: State<String> = _output
     val bitmap: Bitmap = _bitmap
 
-    fun getImages(): Flow<List<Image>> {
+    fun getImages(): List<Image> {
         return _databaseDao.getImages()
     }
 

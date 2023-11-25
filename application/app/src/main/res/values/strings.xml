@@ -7,9 +7,14 @@
 
     <string name="screen_name_image_add">새 이미지 추가</string>
 
-    <string name="indicator_find_image_button">기기에서 이미지 선택</string>
-    <string name="indicator_no_image">등록된 이미지가 없어요.</string>
-    <string name="indicator_image_caption">이미지 설명</string>
+    <string name="string_find_image_button">기기에서 이미지 선택</string>
+    <string name="string_no_image">등록된 이미지가 없어요.</string>
+    <string name="string_image_caption">이미지 설명</string>
+    <string name="string_image_process">윤곽선 처리</string>
+
+    <string name="dialog_universal_dialog_yes">네</string>
+    <string name="dialog_universal_dialog_no">아니오</string>
+    <string name="dialog_delete_image">사진을 삭제하실 건가요?</string>
 
     <string name="setting_option_name_doc_mode">"문서 모드</string>
     <string name="setting_option_name_remove_glare">글레어 제거</string>

@@ -25,31 +25,39 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.caucapstone.app.R
+import com.caucapstone.app.util.navigateBackToRoot
 import com.caucapstone.app.viewmodel.MainViewModel
 
-sealed class NavItem(
+sealed class MainScreenNavItem(
     val title: Int,
     val icon: ImageVector,
     val route: String
 ) {
-    object CameraNavItem : NavItem(R.string.main_nav_bar_name_camera, Icons.Filled.CameraAlt,"Camera")
-    object FileNavItem : NavItem(R.string.main_nav_bar_name_file, Icons.Filled.FileCopy,"File")
-    object SettingNavItem : NavItem(R.string.main_nav_bar_name_setting, Icons.Filled.Settings,"Setting")
+    object CameraNavItem : MainScreenNavItem(R.string.main_nav_bar_name_camera, Icons.Filled.CameraAlt,"/Camera")
+    object FileNavItem : MainScreenNavItem(R.string.main_nav_bar_name_file, Icons.Filled.FileCopy,"/File")
+    object SettingNavItem : MainScreenNavItem(R.string.main_nav_bar_name_setting, Icons.Filled.Settings,"/Setting")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     onNavigate: (String) -> Unit,
+    route: String = "",
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
 
+    when (route) {
+        MainScreenNavItem.CameraNavItem.route -> viewModel.setNavControllerState(0)
+        MainScreenNavItem.FileNavItem.route -> viewModel.setNavControllerState(1)
+        MainScreenNavItem.SettingNavItem.route -> viewModel.setNavControllerState(2)
+    }
+
     Scaffold(
         bottomBar = {
             BottomBar(
-                { route -> navController.navigate(route) { popUpTo(navController.graph.id) { inclusive = true } } },
-                viewModel
+                onItemClicked = { route -> navController.navigateBackToRoot(route) },
+                viewModel = viewModel
             )
         }
     ) {
@@ -59,7 +67,10 @@ fun MainScreen(
                 .padding(bottom = it.calculateBottomPadding()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            MainNavContainer(navController, onNavigate)
+            MainNavContainer(
+                navController = navController,
+                onNavigate = onNavigate,
+                startDestination = route.ifEmpty { MainScreenNavItem.CameraNavItem.route })
         }
     }
 }
@@ -70,9 +81,9 @@ fun BottomBar(
     viewModel: MainViewModel
 ) {
     val items = listOf(
-        NavItem.CameraNavItem,
-        NavItem.FileNavItem,
-        NavItem.SettingNavItem
+        MainScreenNavItem.CameraNavItem,
+        MainScreenNavItem.FileNavItem,
+        MainScreenNavItem.SettingNavItem
     )
 
     NavigationBar {
@@ -93,15 +104,16 @@ fun BottomBar(
 @Composable
 fun MainNavContainer(
     navController: NavHostController,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    startDestination: String
 ) {
     NavHost(
         navController = navController,
-        startDestination = NavItem.CameraNavItem.route,
+        startDestination = startDestination,
         modifier = Modifier.fillMaxSize()
     ) {
-        composable(NavItem.CameraNavItem.route) { CameraScreen() }
-        composable(NavItem.FileNavItem.route) { FileScreen(onNavigate) }
-        composable(NavItem.SettingNavItem.route) { SettingScreen() }
+        composable(MainScreenNavItem.CameraNavItem.route) { CameraScreen() }
+        composable(MainScreenNavItem.FileNavItem.route) { FileScreen(onNavigate) }
+        composable(MainScreenNavItem.SettingNavItem.route) { SettingScreen() }
     }
 }

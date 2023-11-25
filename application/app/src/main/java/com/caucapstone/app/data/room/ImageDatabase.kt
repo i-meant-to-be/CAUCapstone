@@ -8,17 +8,15 @@ import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.Update
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.flowOn
-import java.util.UUID
 import javax.inject.Inject
 
 @Dao
 interface ImageDatabaseDao {
     @Query("SELECT * from image_table")
-    fun getImages(): Flow<List<Image>>
+    fun getImages(): List<Image>
+
+    @Query("SELECT * from image_table WHERE image_id = :id")
+    fun getImageById(id: String): Image
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(image: Image)
@@ -32,8 +30,8 @@ interface ImageDatabaseDao {
     @Update
     suspend fun update(image: Image)
 
-    @Query("SELECT * from image_table WHERE image_id = :uuid")
-    fun isUUIDExists(uuid: UUID): Flow<List<Image>>
+    @Query("SELECT * from image_table WHERE image_id = :id")
+    fun isUUIDExists(id: String): List<Image>
 }
 
 @TypeConverters(Converters::class)
@@ -43,11 +41,12 @@ abstract class ImageDatabase: RoomDatabase() {
 }
 
 class ImageRepository @Inject constructor(private val imageDatabaseDao: ImageDatabaseDao) {
-    fun getImages(): Flow<List<Image>> = imageDatabaseDao.getImages().flowOn(Dispatchers.IO).conflate()
+    fun allImages(): List<Image> = imageDatabaseDao.getImages()
+    fun getImageById(id: String): Image = imageDatabaseDao.getImageById(id)
 
     suspend fun insert(image: Image) = imageDatabaseDao.insert(image)
     suspend fun deleteAll() = imageDatabaseDao.deleteAll()
     suspend fun deleteById(id: String) = imageDatabaseDao.deleteById(id)
     suspend fun update(image: Image) = imageDatabaseDao.update(image)
-    fun isUUIDExists(uuid: UUID) = imageDatabaseDao.isUUIDExists(uuid)
+    fun isUUIDExists(id: String) = imageDatabaseDao.isUUIDExists(id)
 }

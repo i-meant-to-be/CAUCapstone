@@ -128,11 +128,12 @@ fun ImageViewScreen(
                     val path = "${context.filesDir}/${image.id}.jpg"
                     val bitmap = imageProcess(path)
                     val outputStream = context.openFileOutput("${image.id}_p.png", Context.MODE_PRIVATE)
+                    val imageId = viewModel.getUUID()
 
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
                     outputStream.close()
                     viewModel.addImageToDatabase(
-                        "${image.id}_p",
+                        imageId,
                         "(윤곽선 처리) ${image.caption}"
                     )
                 },

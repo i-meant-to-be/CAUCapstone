@@ -1,12 +1,6 @@
 package com.caucapstone.cameratest
 
-import android.content.Context
-import android.widget.ImageView
-import androidx.camera.core.CameraSelector
-import androidx.camera.view.LifecycleCameraController
-import androidx.camera.view.PreviewView
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,19 +22,13 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 
 
 enum class FilterType {
@@ -57,45 +45,12 @@ fun CameraScreen() {
     val colorName = remember { mutableStateOf("초록") }
     val currFilterType = remember { mutableStateOf(FilterType.FILTER_NONE) }
 
-
-    val context: Context = LocalContext.current
-    val cameraController: LifecycleCameraController = remember { LifecycleCameraController(context) }
-    val previewView: PreviewView = remember { PreviewView(context) }
-    val filterImageView: ImageView = remember { ImageView(context) }
-    val lifecycleOwner = LocalLifecycleOwner.current
-//    cameraController.bindToLifecycle(
-//        lifecycleOwner
-//    )
-    cameraController.cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-    previewView.controller = cameraController
-    val cameraSelector: MutableState<CameraSelector> = remember {
-        mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA)
-    }
-
-        LaunchedEffect(previewView) {
-            context.createImageAnalyzerUseCase(
-                lifecycleOwner = lifecycleOwner,
-                cameraSelector = cameraSelector.value,
-                previewView = previewView,
-                filterImageView = filterImageView,
-                colorCodes = colorCodes,
-                colorName = colorName,
-                selectedFilterType = currFilterType.value
-            )
-        }
-
-
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = {previewView}
-        )
-        Canvas(
-            modifier = Modifier.fillMaxSize(),
-            onDraw = {filterImageView}
-        )
-    }
+    PreviewAndFilter(
+        currFilterType = currFilterType.value,
+        sliderValue = sliderValue.value,
+        rgb = {rgb_ -> if (rgb_ != null) { colorCodes.value = rgb_} },
+        approxColorName = {colorName_ -> if (colorName_ != null) { colorName.value = colorName_} }
+    )
     Box(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier
@@ -106,7 +61,6 @@ fun CameraScreen() {
             filterType = currFilterType.value,
             onClick = { filterType -> currFilterType.value = filterType },
             sliderValue = sliderValue.value,
-            // 슬라이더 값 변경 시의 작업을 여기서 구현 (onSliderValueChange)
             onSliderValueChange = { newValue -> sliderValue.value = newValue }
         )
         CameraCrosshair()
@@ -116,7 +70,6 @@ fun CameraScreen() {
             // 카메라 촬영 시의 작업을 여기서 구현 (onButtonClick)
             onButtonClick = {}
         )
-        CameraBody()
     }
 }
 
@@ -130,7 +83,7 @@ fun BlackModeSlider(
         value = value,
         onValueChange = onValueChange,
         steps = 0,
-        valueRange = 0f..100f,
+        valueRange = 0f..360f,
         modifier = Modifier.fillMaxWidth()
     )
 }
@@ -264,16 +217,4 @@ fun ReducibleRadioButton(
         )
         if (value) Text(label)
     }
-}
-
-@Composable
-fun CameraBody() {
-
-}
-
-@Preview
-@Composable
-private fun Preview_CameraContent() {
-    CameraScreen(
-    )
 }

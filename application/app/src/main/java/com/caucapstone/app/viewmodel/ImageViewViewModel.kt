@@ -38,11 +38,19 @@ class ImageViewViewModel @Inject constructor(
             _databaseDao.update(image)
         }
     }
-
     fun deleteImage(id: String) {
         Log.e("CAUCAPSTONE", id)
         viewModelScope.launch {
             _databaseDao.deleteById(id)
+        }
+    }
+    fun addImageToDatabase(
+        id: String,
+        caption: String,
+        originId: String? = null
+    ) {
+        viewModelScope.launch {
+            _databaseDao.insert(Image(id, caption, originId = originId))
         }
     }
 }

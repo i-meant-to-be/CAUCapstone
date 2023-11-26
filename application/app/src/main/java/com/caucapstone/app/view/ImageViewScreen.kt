@@ -1,6 +1,9 @@
 package com.caucapstone.app.view
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -47,7 +50,10 @@ import com.caucapstone.app.R
 import com.caucapstone.app.data.globalPaddingValue
 import com.caucapstone.app.data.room.Image
 import com.caucapstone.app.viewmodel.ImageViewViewModel
+import com.chaquo.python.Python
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileInputStream
 import java.time.format.DateTimeFormatter
 
 private const val DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss"
@@ -117,7 +123,19 @@ fun ImageViewScreen(
             )
             ImageViewBottomBar(
                 expanded = viewModel.bottomBarExpanded.value,
-                onClick = { viewModel.reverseBottomBarExpanded() },
+                onExpandClick = { viewModel.reverseBottomBarExpanded() },
+                onProcessClick = {
+                    val path = "${context.filesDir}/${image.id}.jpg"
+                    val bitmap = imageProcess(path)
+                    val outputStream = context.openFileOutput("${image.id}_p.png", Context.MODE_PRIVATE)
+
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                    outputStream.close()
+                    viewModel.addImageToDatabase(
+                        "${image.id}_p",
+                        "(윤곽선 처리) ${image.caption}"
+                    )
+                },
                 image = image
             )
         }
@@ -246,4 +264,22 @@ fun ImageViewBottomBarItem(
             )
         )
     }
+}
+
+fun imageProcess(path: String): Bitmap {
+    val py = Python.getInstance()
+    val module = py.getModule("test")
+    val byteArrayOutputStream = ByteArrayOutputStream()
+    val bitmap = BitmapFactory.decodeStream(FileInputStream(File(path)))
+
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+    val encodedImage = module.callAttr(
+        "test",
+        byteArrayOutputStream.toByteArray(),
+        bitmap.height,
+        bitmap.width
+    ).toString().substring(2)
+    byteArrayOutputStream.close()
+    val imageBytes = Base64.decode(encodedImage, Base64.DEFAULT)
+    return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
 }

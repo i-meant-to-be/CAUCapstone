@@ -16,5 +16,11 @@ data class Image(
     val caption: String,
 
     @ColumnInfo(name = "image_local_date_time")
-    val localDateTime: LocalDateTime = LocalDateTime.now()
+    val localDateTime: LocalDateTime = LocalDateTime.now(),
+
+    @ColumnInfo(name = "image_is_processed")
+    val isProcessed: Boolean = false,
+
+    @ColumnInfo(name = "image_origin_id")
+    val originId: String?
 )

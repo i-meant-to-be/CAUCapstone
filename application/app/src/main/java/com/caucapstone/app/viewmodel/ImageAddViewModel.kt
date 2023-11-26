@@ -50,7 +50,7 @@ class ImageAddViewModel @Inject constructor(
         caption: String
     ) {
         viewModelScope.launch {
-            _databaseDao.insert(Image(id, caption))
+            _databaseDao.insert(Image(id, caption, originId = null))
         }
     }
 }

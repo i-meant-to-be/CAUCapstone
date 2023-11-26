@@ -31,7 +31,6 @@ def content_isolation(img): #must be hsv image
 	img_ = cv.bitwise_or(img_, img_, mask=mask)
 	img_ = cv.add(img_,white)
 	
-	#showgraph_img(cv.cvtColor(img_, cv.COLOR_BGR2RGB))
 	return img_
 
 def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=True):
@@ -64,7 +63,6 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 	img = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 	img_downscaled = cv.resize(img, (int(img.shape[1]/2),int(img.shape[0]/2)))
 	
-	'''
 	# optimal k value analysis via elbow method
 	# compactness index generation for k in range 2~16(inclusive)
 	K_SEARCH_RANGE_START = 4
@@ -75,9 +73,9 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 	hue,_,_ = cv.split(img_downscaled)
 	hue = hue.reshape((-1, 1))
 	hue = np.float32(hue)
-	for k in range(K_SEARCH_RANGE_START, K_SEARCH_RANGE_END+1):
+	for k in range(K_SEARCH_RANGE_START, K_SEARCH_RANGE_END+1, 2):
 		criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 10, 1.0) # iteration stop(termination) criteria: max iteration num, iteration stop thres(epsilon)
-		ret,label,center =	cv.kmeans(hue, k, None, criteria, 10, cv.KMEANS_RANDOM_CENTERS)
+		ret,label,center = cv.kmeans(hue, k, None, criteria, 2, cv.KMEANS_RANDOM_CENTERS)
 		label = label.reshape((-1))
 	
 		# label: array of each pixel's category info(0 ~ k-1)
@@ -110,7 +108,7 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 	# resolve the distance between every point in the graph of (x, compact_normalized[x]) and the line.
 	# the local maximum of this point-to-line distance graph is the elbow(knee) point.
 	# fancy distance formula from https://stackoverflow.com/questions/40970478/distance-from-a-point-to-a-line
-	diff_x = K_SEARCH_RANGE_END - K_SEARCH_RANGE_START
+	diff_x = (K_SEARCH_RANGE_END - K_SEARCH_RANGE_START) // 2 
 	diff_y = min_range - max_range
 	point_line_distance = []
 	den = sqrt(diff_y**2 + diff_x**2)
@@ -119,25 +117,21 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 		num = abs(diff_y*x - diff_x*y + diff_x*max_range)
 		point_line_distance.append(num/den)
 	
-	#showgraph_num(K_SEARCH_RANGE_START, K_SEARCH_RANGE_END+1, point_line_distance)
+
 	dist_locmax = loc_max(np.array(point_line_distance), np.greater)[0] # list of local maxima of silhouette score graph
-	#print(dist_locmax)
+
 	
-	# pick optimal k from silhouette score(apply compensation to later elements)
-	a = 1.01                        # compensation constant
+	# pick optimal k from point-line distance graph(apply compensation to later elements)
+	a = 1.05                        # compensation constant
 	m = dist_locmax[0]              # index for max val (= k-2)
-	n = point_line_distance[m]*(a**m)   # max silhouette score(initial val: when k=2(m=0))
-	#print(m,n)
+	n = point_line_distance[m]*(a**(m*2))   # max silhouette score(initial val: when k=2(m=0))
 	for i in dist_locmax:                # find biggest local maximum, but:
-		current = point_line_distance[i]*(a**i) # allow up to 10% loss per step(k value increment) for later local maxima(for messy images)
-		#print(m, current)
+		current = point_line_distance[i]*(a**(i*2)) # allow up to 10% loss per step(k value increment) for later local maxima(for messy images)
 		if n < current: 
 			n = current
 			m = i
-	
-	#m += 2
-	#print(f'k = {m + K_SEARCH_RANGE_START}')
-	
+
+	'''
 	# check if there are any labels that are less than 1% of all pixels
 	# if there is, then reduce m(index) by 1; effectively reducing the k value
 	label_count_thres = hue.size*0.015
@@ -169,21 +163,15 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 		else:
 			break
 	'''
-	#k = m + K_SEARCH_RANGE_START
-	#k=5
-	#print(f'adjusted k = {k}')
+ 	
+	k = m*2 + K_SEARCH_RANGE_START
 	
-	# KNN state has been tainted by k-value search. Reset KNN state with dummy procedure.
-	resetter = np.float32(np.ones((10,10)))
-	criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-	ret,label,center = cv.kmeans(resetter, 2, None, criteria, 10, cv.KMEANS_RANDOM_CENTERS)
-
 	# perform KNN
 	hue,sat,val = cv.split(img)
 	hue = hue.reshape((-1, 1))
 	hue = np.float32(hue)
 	criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-	ret,label,center = cv.kmeans(hue, k, None, criteria, 10, cv.KMEANS_RANDOM_CENTERS)
+	ret,label,center = cv.kmeans(hue, k, None, criteria, 4, cv.KMEANS_RANDOM_CENTERS)
 	
 	# label: array of each pixel's category info(0 ~ k-1)
 	# center: BGR value of all k colors

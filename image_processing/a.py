@@ -34,7 +34,7 @@ def content_isolation(img): #must be hsv image
 	#showgraph_img(cv.cvtColor(img_, cv.COLOR_BGR2RGB))
 	return img_
 
-def process_image(value, height, width, high_pass_filter=False, reduce_glare=True):
+def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=True):
 
 	erode_color_mask = True
 	bilateral_filter = True
@@ -64,7 +64,7 @@ def process_image(value, height, width, high_pass_filter=False, reduce_glare=Tru
 	img = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 	img_downscaled = cv.resize(img, (int(img.shape[1]/2),int(img.shape[0]/2)))
 	
-	
+	'''
 	# optimal k value analysis via elbow method
 	# compactness index generation for k in range 2~16(inclusive)
 	K_SEARCH_RANGE_START = 4
@@ -168,8 +168,8 @@ def process_image(value, height, width, high_pass_filter=False, reduce_glare=Tru
 				break
 		else:
 			break
-
-	k = m + K_SEARCH_RANGE_START
+	'''
+	#k = m + K_SEARCH_RANGE_START
 	#k=5
 	#print(f'adjusted k = {k}')
 	

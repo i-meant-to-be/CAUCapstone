@@ -3,7 +3,6 @@ package com.caucapstone.cameratest
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Matrix
-import android.graphics.Matrix.ScaleToFit
 import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -14,27 +13,21 @@ import androidx.camera.core.UseCase
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.example.composephoto.camera.CameraPreview
-import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
@@ -44,12 +37,15 @@ const val TYPE_NUM_PROTANOPIA = 1
 const val TYPE_NUM_DEUTERANOPIA = 2
 const val TYPE_NUM_TRITANOPIA = 3
 
-private var coverRotation : Int = 0
-var hueCriteria = 0F
-var blindType = 1
-var filterType : FilterType = FilterType.FILTER_NONE
-var rgb_ = Triple<Int,Int,Int>(0,0,0)
-var colorName_ = ""
+
+object GlobalVariables {
+    var coverRotation: Int = 0
+    var hueCriteria = 0F
+    var blindType = 1
+    var filterType: FilterType = FilterType.FILTER_NONE
+    var rgb = Triple<Int, Int, Int>(0, 0, 0)
+    var colorName = "-"
+}
 
 @Composable
 fun PreviewAndFilter(
@@ -57,22 +53,27 @@ fun PreviewAndFilter(
     cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
     currFilterType : FilterType,
     sliderValue: Float,
+    blindType: Int,
     rgb : (Triple<Int,Int,Int>?) -> Unit,
     approxColorName : (String?) -> Unit
 ) {
     val context = LocalContext.current
-    filterType = currFilterType
-    hueCriteria = sliderValue
-    rgb(rgb_)
-    approxColorName(colorName_)
+
+    GlobalVariables.filterType = currFilterType
+    GlobalVariables.hueCriteria = sliderValue
+    GlobalVariables.blindType = blindType
+
+    rgb(GlobalVariables.rgb)
+    approxColorName(GlobalVariables.colorName)
 
     Box(modifier = modifier) {
         val lifecycleOwner = LocalLifecycleOwner.current
-        val coroutineScope = rememberCoroutineScope()
+//        val coroutineScope = rememberCoroutineScope()
         var previewUseCase by remember { mutableStateOf<UseCase>(Preview.Builder().build()) }
         var bitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+        var roll by remember {  mutableIntStateOf(0)  }
 
-        val imageCaptureUseCase by remember {
+        val imageCaptureUseCase by remember {                                           //사진 찍으면 어떻게 되는지 구현해야함
             mutableStateOf(
                 ImageCapture.Builder()
                     .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
@@ -80,26 +81,27 @@ fun PreviewAndFilter(
             )
         }
 
-        val imageAnalyzerFilters = ImageAnalysis.Builder()
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)  //이미지 받는 값 변경 yuv(기본설정) > rgba
-            .build()
+        val imageAnalyzerFilters by remember {
+            mutableStateOf(
+                ImageAnalysis.Builder()
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)  //이미지 받는 값 변경 yuv(기본설정) > rgba
+                    .build()
+            )
+        }
+
 
         imageAnalyzerFilters.setAnalyzer(
             Executors.newSingleThreadExecutor(),
             filterAnalyzer { bitMap ->
 
                 val matrix = Matrix()
-                matrix.postRotate(coverRotation.toFloat()) // 90도 회전
+                matrix.postRotate(GlobalVariables.coverRotation.toFloat()) // 90도 회전
                 val rotatedBitmap = Bitmap.createBitmap(bitMap!!, 0, 0, bitMap.width, bitMap.height, matrix, true)
 
                 bitmap = rotatedBitmap.asImageBitmap()
             }
         )
-
-        rgb_ = rgb_
-        colorName_ = colorName_
-
 
         Box {
             CameraPreview(
@@ -108,6 +110,10 @@ fun PreviewAndFilter(
                     previewUseCase = it
                 }
             )
+            if (currFilterType == FilterType.FILTER_NONE){      //roll - 기본 preview상에서도 runOnUiThread하기 위해 선언해 놓았음
+                roll+=1
+                roll-=1
+            }
             if (currFilterType != FilterType.FILTER_NONE) {
                 bitmap?.let {
                     Image(
@@ -161,38 +167,38 @@ private fun toRGB_Bitmap(image: ImageProxy): Bitmap? {
 //-----------------------------------------------------------------------------------------------------
 
 //이미지 분석 종합(색상명 출력, 각 필터들 적용)
-class filterAnalyzer(private val callBackBitMap: (Bitmap?) -> Unit) :
-    ImageAnalysis.Analyzer {
+class filterAnalyzer(private val callBackBitMap: (Bitmap?) -> Unit) : ImageAnalysis.Analyzer {
     private var  lastAnalyzedTimestamp = 0L
+
     override fun analyze(image: ImageProxy) {
         val rgbBitMap = toRGB_Bitmap(image) ?: return
-        coverRotation = image.imageInfo.rotationDegrees
+        GlobalVariables.coverRotation = image.imageInfo.rotationDegrees
         image.close()
+
+        val imageWidth = rgbBitMap!!.width
+        val imageHeight = rgbBitMap!!.height
+
+        // 가운데 지점의 좌표 계산
+        val centerX = imageWidth / 2
+        val centerY = imageHeight / 2
+
+        // 가운데 지점의 색상 추출
+        val centerColor = rgbBitMap.getPixel(centerX, centerY)
+
+        // 추출된 색상 정보를 분해
+        val red = Color.red(centerColor)
+        val green = Color.green(centerColor)
+        val blue = Color.blue(centerColor)
+
+        //ColorToText 클래스 접근해서 근사 대표 색상 받아오기
+        val representativeColorName = ColorToText.analyzer(red, green, blue)
 
         val currentTimestamp = System.currentTimeMillis()
         if (currentTimestamp - lastAnalyzedTimestamp >= TimeUnit.MILLISECONDS.toMillis(300)) {
 
-            val imageWidth = rgbBitMap!!.width
-            val imageHeight = rgbBitMap!!.height
-
-            // 가운데 지점의 좌표 계산
-            val centerX = imageWidth / 2
-            val centerY = imageHeight / 2
-
-            // 가운데 지점의 색상 추출
-            val centerColor = rgbBitMap.getPixel(centerX, centerY)
-
-            // 추출된 색상 정보를 분해
-            val red = Color.red(centerColor)
-            val green = Color.green(centerColor)
-            val blue = Color.blue(centerColor)
-
-            //ColorToText 클래스 접근해서 근사 대표 색상 받아오기
-            val representativeColorName = ColorToText.analyzer(red, green, blue)
-
-            rgb_ = Triple<Int,Int,Int>(red,green,blue)
+            GlobalVariables.rgb = Triple(red,green,blue)
             if (representativeColorName != null) {
-                colorName_ = representativeColorName
+                GlobalVariables.colorName = representativeColorName
             }
 
             lastAnalyzedTimestamp = currentTimestamp
@@ -200,18 +206,17 @@ class filterAnalyzer(private val callBackBitMap: (Bitmap?) -> Unit) :
 
 
         //정해진 범위 외의 색상 흑백으로 변환
-        if(filterType == FilterType.FILTER_SPECIFIC) {
-            callBackBitMap(coverFilter(rgbBitMap, hueCriteria))
+        if (GlobalVariables.filterType == FilterType.FILTER_SPECIFIC) {
+            callBackBitMap(coverFilter(rgbBitMap, GlobalVariables.hueCriteria))
         }
         //Dalton색상으로 변경하기
-        else if(filterType == FilterType.FILTER_DALTONIZED){
-            callBackBitMap(daltonFilter(rgbBitMap,blindType))
+        else if(GlobalVariables.filterType == FilterType.FILTER_DALTONIZED){
+            callBackBitMap(daltonFilter(rgbBitMap,GlobalVariables.blindType))
         }
         //잘 안보이는 색상에 빗금 치기
-        else if(filterType == FilterType.FILTER_STRIPE){
-            callBackBitMap(stripeFilter(rgbBitMap,blindType))
+        else if(GlobalVariables.filterType == FilterType.FILTER_STRIPE){
+            callBackBitMap(stripeFilter(rgbBitMap,GlobalVariables.blindType))
         }
-
 
     }
 }
@@ -293,9 +298,9 @@ fun daltonFilter(inputBitmap: Bitmap, blindType : Int): Bitmap {
         for (y in 0 until height) {
             val pixel = scaledBitmap.getPixel(x, y)
 
-            var r = Color.red(pixel)
-            var g = Color.green(pixel)
-            var b = Color.blue(pixel)
+            val r = Color.red(pixel)
+            val g = Color.green(pixel)
+            val b = Color.blue(pixel)
 
             // RGB to LMS matrix conversion
             val L = (17.8824 * r) + (43.5161 * g) + (4.11935 * b)
@@ -339,9 +344,8 @@ fun daltonFilter(inputBitmap: Bitmap, blindType : Int): Bitmap {
 
 //패턴삽입을 위한 bitmap 처리 과정
 fun stripeFilter(inputBitmap: Bitmap, blindType : Int): Bitmap {
-    val width = inputBitmap.width
-    val height = inputBitmap.height
-
+    val width = inputBitmap.width / 2
+    val height = inputBitmap.height / 2
     val scaledBitmap: Bitmap = Bitmap.createScaledBitmap(inputBitmap, width, height, true)
     val outputBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
     val v = 50
@@ -351,37 +355,24 @@ fun stripeFilter(inputBitmap: Bitmap, blindType : Int): Bitmap {
         TYPE_NUM_TRITANOPIA -> 240
         else -> 0
     }
-
     var i = 0
-
-    for (x in 1 until width step 3) {
-        for (y in 1 until height step 3) {
+    for (x in 0 until width) {
+        for (y in 0 until height) {
             val pixel = scaledBitmap.getPixel(x, y)
-
             val hsv = FloatArray(3)
             Color.RGBToHSV(Color.red(pixel), Color.green(pixel), Color.blue(pixel), hsv)
             val hue = hsv[0]
             val sat = hsv[1]
 
 
+            // 색각이상별로 잘 안보이는 색상의 hue값에 검정 줄무늬 넣기
             // 색각이상별로 잘 안보이는 색상(적색계열, 녹색계열, 청색계열)의 hue값에 검정무늬 넣기
-            if ((abs(hue - criteria) <= v || abs(hue - (criteria + 360)) <= v || abs((hue + 360) - criteria) <= v) && sat > 0.20 && i%7 == 4 ) {
+            if ((abs(hue - criteria) <= v || abs(hue - (criteria + 360)) <= v || abs((hue + 360) - criteria) <= v) && sat > 0.30 && i%17 == 10 ) {
                 val stripePoint = Color.rgb(50, 50, 50)
                 outputBitmap.setPixel(x, y, stripePoint) //중간중간 빗금을 위한 부분
-                outputBitmap.setPixel(x+1, y+1, stripePoint)
-                outputBitmap.setPixel(x-1, y-1, stripePoint)
             } else {
                 outputBitmap.setPixel(x, y, pixel)
-                outputBitmap.setPixel(x+1, y+1, scaledBitmap.getPixel(x+1,y+1))
-                outputBitmap.setPixel(x-1, y-1, scaledBitmap.getPixel(x-1,y-1))
             }
-
-            outputBitmap.setPixel(x+1, y, scaledBitmap.getPixel(x+1,y))
-            outputBitmap.setPixel(x, y+1, scaledBitmap.getPixel(x,y+1))
-            outputBitmap.setPixel(x-1, y, scaledBitmap.getPixel(x-1, y))
-            outputBitmap.setPixel(x, y-1, scaledBitmap.getPixel(x, y-1))
-            outputBitmap.setPixel(x-1, y+1, scaledBitmap.getPixel(x-1, y+1))
-            outputBitmap.setPixel(x+1, y-1, scaledBitmap.getPixel(x+1, y-1))
             i++
         }
     }

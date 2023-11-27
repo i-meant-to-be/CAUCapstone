@@ -1,6 +1,7 @@
 package com.caucapstone.app.view
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
@@ -43,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -68,6 +70,7 @@ fun ImageViewScreen(
 ) {
     val context = LocalContext.current
     val image = viewModel.getImageById(id)
+    val path = "${context.filesDir}/${image.id}.png"
 
     if (viewModel.dialogState.value == 1) {
         UniversalDialog(
@@ -75,7 +78,7 @@ fun ImageViewScreen(
             text = { Text(stringResource(R.string.dialog_delete_image)) },
             onConfirm = {
                 viewModel.deleteImage(id)
-                val imageFile = File(context.filesDir, "${id}.jpg")
+                val imageFile = File(context.filesDir, "${id}.png")
                 if (imageFile.exists()) {
                     imageFile.delete()
                 }
@@ -91,7 +94,19 @@ fun ImageViewScreen(
                 onClick = onBackNavigate,
                 actions = {
                     IconButton(onClick = {
+                        val imageUri = FileProvider.getUriForFile(
+                            context,
+                            "com.caucapstone.app.provider",
+                            File(context.filesDir, "${image.id}.png")
+                        )
+                        val sendIntent: Intent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_STREAM, imageUri)
+                            type = "image/png"
+                        }
+                        val shareIntent = Intent.createChooser(sendIntent, null)
 
+                        context.startActivity(shareIntent, null)
                     }) {
                         Icon(Icons.Filled.Share, null)
                     }
@@ -118,23 +133,23 @@ fun ImageViewScreen(
         ) {
             ImageViewImage(
                 context = context,
-                id = id,
+                path = path,
                 modifier = Modifier.fillMaxWidth()
             )
             ImageViewBottomBar(
                 expanded = viewModel.bottomBarExpanded.value,
                 onExpandClick = { viewModel.reverseBottomBarExpanded() },
                 onProcessClick = {
-                    val path = "${context.filesDir}/${image.id}.jpg"
                     val bitmap = imageProcess(path)
-                    val outputStream = context.openFileOutput("${image.id}_p.png", Context.MODE_PRIVATE)
                     val imageId = viewModel.getUUID()
+                    val outputStream = context.openFileOutput("${imageId}.png", Context.MODE_PRIVATE)
 
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
                     outputStream.close()
                     viewModel.addImageToDatabase(
                         imageId,
-                        "(윤곽선 처리) ${image.caption}"
+                        "(윤곽선 처리) ${image.caption}",
+                        image.id
                     )
                 },
                 image = image
@@ -146,10 +161,9 @@ fun ImageViewScreen(
 @Composable
 fun ImageViewImage(
     context: Context,
-    id: String,
+    path: String,
     modifier: Modifier
 ) {
-    val path = "${context.filesDir}/${id}.jpg"
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
             .data(path)

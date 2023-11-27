@@ -1,6 +1,5 @@
 package com.caucapstone.app.view
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
@@ -15,13 +14,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DeveloperMode
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -47,9 +44,6 @@ import com.caucapstone.app.data.roundedCornerShapeValue
 import com.caucapstone.app.util.NestedNavItem
 import com.caucapstone.app.viewmodel.FileViewModel
 import com.chaquo.python.Python
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -64,7 +58,6 @@ fun FileScreen(
 ) {
     val context = LocalContext.current
     val items = viewModel.getImages()
-    val path = "${context.filesDir}/Profile.jpg"
     val coroutineScope = rememberCoroutineScope()
 
     // Normal layer
@@ -107,21 +100,6 @@ fun FileScreen(
         ) {
             Icon(Icons.Filled.Add, contentDescription = null)
         }
-        Box(modifier = Modifier.width(10.dp))
-        FloatingActionButton(
-            onClick = {
-                coroutineScope.launch {
-                    val bitmap = testFunc(path)
-                    val outputStream = context.openFileOutput("Profile.png", Context.MODE_PRIVATE)
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                    withContext(Dispatchers.IO) {
-                        outputStream.close()
-                    }
-                }
-            }
-        ) {
-            Icon(Icons.Filled.DeveloperMode, contentDescription = null)
-        }
     }
 }
 
@@ -132,7 +110,7 @@ fun ImageItemCard(
     isLastItem: Boolean = false
 ) {
     val context = LocalContext.current
-    val path = "${context.filesDir}/${image.id}.jpg"
+    val path = "${context.filesDir}/${image.id}.png"
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
             .data(path)

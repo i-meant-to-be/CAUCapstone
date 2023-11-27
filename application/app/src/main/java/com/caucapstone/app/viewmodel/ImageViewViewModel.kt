@@ -1,7 +1,6 @@
 package com.caucapstone.app.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -41,7 +40,6 @@ class ImageViewViewModel @Inject constructor(
         }
     }
     fun deleteImage(id: String) {
-        Log.e("CAUCAPSTONE", id)
         viewModelScope.launch {
             _databaseDao.deleteById(id)
         }

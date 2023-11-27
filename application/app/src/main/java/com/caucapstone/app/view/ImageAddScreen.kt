@@ -165,7 +165,7 @@ fun saveImageToInternalStorage(
     id: String
 ) {
     val inputStream = context.contentResolver.openInputStream(uri)
-    val outputStream = context.openFileOutput("${id}.jpg", Context.MODE_PRIVATE)
+    val outputStream = context.openFileOutput("${id}.png", Context.MODE_PRIVATE)
     inputStream?.use { input ->
         outputStream.use { output ->
             input.copyTo(output)

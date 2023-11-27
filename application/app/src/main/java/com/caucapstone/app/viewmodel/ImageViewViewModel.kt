@@ -18,15 +18,20 @@ class ImageViewViewModel @Inject constructor(
     application: Application
 ) : ViewModel() {
     private val _dialogState = mutableStateOf(0)
+    private val _isImageDeleted = mutableStateOf(false)
     private val _bottomBarExpanded = mutableStateOf(false)
     private val _databaseDao = DatabaseModule
         .provideAppDatabase(application.applicationContext)
         .imageDao()
     val dialogState: State<Int> = _dialogState
     val bottomBarExpanded: State<Boolean> = _bottomBarExpanded
+    val isImageDeleted: State<Boolean> = _isImageDeleted
 
     fun setDialogState(value: Int) {
         _dialogState.value = value
+    }
+    fun setImageDeleted() {
+        _isImageDeleted.value = true
     }
     fun reverseBottomBarExpanded() {
         _bottomBarExpanded.value = !_bottomBarExpanded.value

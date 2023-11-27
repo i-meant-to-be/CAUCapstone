@@ -23,4 +23,11 @@ data class Image(
 
     @ColumnInfo(name = "image_origin_id")
     val originId: String?
-)
+) {
+    companion object {
+        fun getDefaultInstance(): Image {
+            return Image("", "", LocalDateTime.now(), false, "")
+        }
+    }
+}
+

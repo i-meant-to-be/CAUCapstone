@@ -18,6 +18,43 @@ def showgraph_img(img):
 	plt.show()
 '''
 
+def separate_color(value, height, width, h):
+	arr = np.frombuffer(bytes(value), dtype=np.uint8)
+	img = cv.imdecode(arr, cv.IMREAD_UNCHANGED)
+	img_bgr = cv.cvtColor(img, cv.COLOR_RGB2BGR)
+	img_hsv = cv.cvtColor(img_bgr, cv.COLOR_BGR2HSV)
+	
+	kern_size = int(min(img.shape[:2])*0.004) # choose kernel size based on image dimension
+	kern = np.ones((kern_size,kern_size), np.uint8) # kernel for erode/dilate; bigger number means larger erosion/dilation
+	
+	brighten = 60
+
+	mask = None
+	if h > 178 or h < 2:
+		mask = cv.inRange(img_hsv, np.array([0,10,10]), np.array([1,255,255]))
+		mask = cv.add(mask, cv.inRange(img_hsv, np.array([179,0,0]), np.array([180,255,255]) ))
+	else:
+		mask = cv.inRange(img_hsv, np.array(h,0,0]), np.array(h,255,255])) # mask for the i-th color(center[i])
+	if kern_size > 1:
+		mask = cv.dilate(cv.erode(mask, kern), kern) # erode then dilate mask to get rid of mess(pixelated parts)
+	contours, hierarchy = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE) # create contour along mask
+	
+	selected = cv.bitwise_or(img_bgr, img_bgr, mask=mask)
+	mask = cv.bitwise_not(mask)
+	other = cv.bitwise_or(img_bgr, img_bgr, mask=mask)
+	_,_,v = cv.split(cv.cvtColor(other, cv.COLOR_BGR2HSV))
+	
+	lim = 255 - brighten
+	v[ v > lim ] = 255
+	v[ v < lim ] += brighten
+	
+	other = cv.cvtColor(v, cv.COLOR_GRAY2BGR)
+	img = cv.cvtColor(cv.drawContours(cv.add(selected, other),contours,-1,(0,0,0),2), cv.COLOR_BGR2RGB)
+	_, a = cv.imencode('.png', img)
+	
+	return base64.b64encode(a.tobytes())
+	
+	
 def content_isolation(img): #must be hsv image
 	sat_thres = 45      # lower bound val~
 	bright_thres = 100  # ~upper bound val
@@ -193,8 +230,8 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 	#print(f'actual k = {k}')
 
 	# create and apply contour for areas of all k colors
-	mask_list = []
-	contour_list = []
+	#mask_list = []
+	#contour_list = []
 	kern_size = int(min(img.shape[:2])*0.004) # choose kernel size based on image dimension
 	#print(f'kern_size = {kern_size}')
 	kern = np.ones((kern_size,kern_size), np.uint8) # kernel for erode/dilate; bigger number means larger erosion/dilation
@@ -205,44 +242,17 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 			#showgraph_img(mask)
 		else:
 			mask = cv.inRange(result, np.array([center[i],0,0]), np.array([center[i],255,255])) # mask for the i-th color(center[i])
-		mask_list.append(mask)
+		#mask_list.append(mask)
 		if kern_size > 1 and erode_color_mask:
 			mask = cv.dilate(cv.erode(mask, kern), kern) # erode then dilate mask to get rid of mess(pixelated parts)
 		contours, hierarchy = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE) # create contour along mask
 		cv.drawContours(result_with_contour, contours, -1, (0,0,0), 1) # -1 means draw all contour, (0,0,0) is color, last is line thickness
-		contour_list.append(contours)
+		#contour_list.append(contours)
 
-	result = cv.cvtColor(result_with_contour, cv.COLOR_HSV2RGB)
+	result_with_contour = cv.cvtColor(result_with_contour, cv.COLOR_HSV2RGB)
+	_, a = cv.imencode('.png', result_with_contour)
 	_, b = cv.imencode('.png', result)
-	return base64.b64encode(b.tobytes())
+	label = label.reshape((height, width))
+	
+	return [base64.b64encode(a.tobytes()), base64.b64encode(b.tobytes()), label, center]
 
-#result = cv.cvtColor(result_with_contour, cv.COLOR_BGR2RGB)
-#showgraph_img(result)
-
-'''
-# select color to view area by color
-img = cv.cvtColor(img, cv.COLOR_HSV2BGR)
-brighten = 60
-while True:
-	choice = input(f'input k value(1~{k}), else to quit: ')
-	if not choice.isnumeric():
-		print('quiting.')
-		break
-	choice = int(choice)
-	if choice < 1 or choice > k:
-		continue
-	choice -= 1
-	mask = mask_list[choice]
-	selected = cv.bitwise_or(img, img, mask=mask)
-	mask = cv.bitwise_not(mask)
-	other = cv.bitwise_or(img, img, mask=mask)
-	_,_,v = cv.split(cv.cvtColor(other, cv.COLOR_BGR2HSV))
-
-	lim = 255 - brighten
-	v[ v > lim ] = 255
-	v[ v < lim ] += brighten
-
-	other = cv.cvtColor(v, cv.COLOR_GRAY2BGR)
-
-	showgraph_img(cv.cvtColor(cv.drawContours(cv.add(selected, other),contour_list[choice],-1,(0,0,0),2), cv.COLOR_BGR2RGB))
-'''

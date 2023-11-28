@@ -17,7 +17,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 1
-        versionName "1.0"
+        versionName "0.0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -50,6 +50,7 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
     }
 
@@ -93,9 +94,7 @@ dependencies {
     implementation "androidx.compose.material:material-icons-extended"
 
     // Hilt & Navigation
-    //noinspection GradleDependency
-    implementation "androidx.navigation:navigation-compose:2.5.3"
-    //noinspection GradleDependency
+    implementation "androidx.navigation:navigation-compose:2.7.5"
     implementation "androidx.hilt:hilt-navigation-compose:1.0.0"
 
     // Proto Datastore

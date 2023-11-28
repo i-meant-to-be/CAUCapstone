@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,8 +43,8 @@ private fun NoPermissionContent(
             icon = Icons.Filled.CameraAlt,
             message = stringResource(R.string.string_request_camera_permission)
         )
-        Box(modifier = Modifier.height(50.dp))
-        TextButton(onClick = onRequestPermission) {
+        Box(modifier = Modifier.height(30.dp))
+        Button(onClick = onRequestPermission) {
             Text(text = stringResource(R.string.string_grant_permission))
         }
     }

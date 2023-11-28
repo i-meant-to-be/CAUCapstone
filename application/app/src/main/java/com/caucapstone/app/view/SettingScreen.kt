@@ -11,8 +11,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -35,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.caucapstone.app.ColorBlindType
 import com.caucapstone.app.FilterType
 import com.caucapstone.app.R
 import com.caucapstone.app.SettingProto
@@ -45,11 +49,13 @@ import kotlin.math.roundToInt
 @Composable
 fun SettingScreen(viewModel: SettingViewModel = hiltViewModel()) {
     val data = viewModel.settingFlow.collectAsState(initial = SettingProto.getDefaultInstance()).value
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(globalPaddingValue)
+            .verticalScroll(scrollState)
     ) {
         DocModeSettingItem(
             checked = data.docMode,
@@ -66,46 +72,89 @@ fun SettingScreen(viewModel: SettingViewModel = hiltViewModel()) {
             valueRange = -5f..5f
         )
         FilterTypeSettingItem(
-            onClick = { viewModel.filterTypeExpanded.value = true },
+            onClick = { viewModel.setFilterTypeExpanded(true) },
             buttonText = {
                 val text = when (data.defaultFilterType) {
                     FilterType.FILTER_NONE -> stringResource(R.string.filter_name_none)
                     FilterType.FILTER_SPECIFIC -> stringResource(R.string.filter_name_specific)
                     FilterType.FILTER_DALTONIZED -> stringResource(R.string.filter_name_daltonized)
                     FilterType.FILTER_STRIPE -> stringResource(R.string.filter_name_stripe)
-                    FilterType.UNRECOGNIZED -> stringResource(R.string.filter_name_none)
+                    else -> stringResource(R.string.filter_name_none)
                 }
                 Text(text)
             },
             expanded = viewModel.filterTypeExpanded.value,
-            onDismissRequest = { viewModel.filterTypeExpanded.value = false }
+            onDismissRequest = { viewModel.setFilterTypeExpanded(false) }
         ) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.filter_name_none)) },
                 onClick = {
                     viewModel.setDefaultFilterType(FilterType.FILTER_NONE)
-                    viewModel.filterTypeExpanded.value = false
+                    viewModel.setFilterTypeExpanded(false)
                 }
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.filter_name_specific)) },
                 onClick = {
                     viewModel.setDefaultFilterType(FilterType.FILTER_SPECIFIC)
-                    viewModel.filterTypeExpanded.value = false
+                    viewModel.setFilterTypeExpanded(false)
                 }
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.filter_name_stripe)) },
                 onClick = {
                     viewModel.setDefaultFilterType(FilterType.FILTER_STRIPE)
-                    viewModel.filterTypeExpanded.value = false
+                    viewModel.setFilterTypeExpanded(false)
                 }
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.filter_name_daltonized)) },
                 onClick = {
                     viewModel.setDefaultFilterType(FilterType.FILTER_DALTONIZED)
-                    viewModel.filterTypeExpanded.value = false
+                    viewModel.setFilterTypeExpanded(false)
+                }
+            )
+        }
+        ColorBlindTypeSettingItem(
+            onClick = { viewModel.setColorBlindTypeExpanded(true) },
+            buttonText = {
+                val text = when (data.colorBlindType) {
+                    ColorBlindType.COLOR_BLIND_PROTANOPIA -> stringResource(R.string.color_blind_name_protanopia)
+                    ColorBlindType.COLOR_BLIND_DEUTERANOPIA -> stringResource(R.string.color_blind_name_deuteranopia)
+                    ColorBlindType.COLOR_BLIND_TRITANOPIA -> stringResource(R.string.color_blind_name_tritanopia)
+                    else -> stringResource(R.string.color_blind_name_none)
+                }
+                Text(text)
+            },
+            expanded = viewModel.colorBlindTypeExpanded.value,
+            onDismissRequest = { viewModel.setColorBlindTypeExpanded(false) }
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.color_blind_name_none)) },
+                onClick = {
+                    viewModel.setColorBlindType(ColorBlindType.COLOR_BLIND_NONE)
+                    viewModel.setColorBlindTypeExpanded(false)
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.color_blind_name_protanopia)) },
+                onClick = {
+                    viewModel.setColorBlindType(ColorBlindType.COLOR_BLIND_PROTANOPIA)
+                    viewModel.setColorBlindTypeExpanded(false)
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.color_blind_name_deuteranopia)) },
+                onClick = {
+                    viewModel.setColorBlindType(ColorBlindType.COLOR_BLIND_DEUTERANOPIA)
+                    viewModel.setColorBlindTypeExpanded(false)
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.color_blind_name_tritanopia)) },
+                onClick = {
+                    viewModel.setColorBlindType(ColorBlindType.COLOR_BLIND_TRITANOPIA)
+                    viewModel.setColorBlindTypeExpanded(false)
                 }
             )
         }
@@ -289,14 +338,42 @@ fun FilterTypeSettingItem(
 ) {
     SettingItemMultipleLineBackground(
         stringResource(R.string.setting_option_name_filter_type),
-        stringResource(R.string.setting_option_expl_filter_type),
-        true
+        stringResource(R.string.setting_option_expl_filter_type)
     ) {
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = onClick
         ) {
             Icon(Icons.Filled.FilterList, contentDescription = null)
+            Box(modifier = Modifier.width(10.dp))
+            buttonText()
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = onDismissRequest,
+            content = content
+        )
+    }
+}
+
+@Composable
+fun ColorBlindTypeSettingItem(
+    onClick: () -> Unit,
+    buttonText: @Composable () -> Unit,
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    content: @Composable (ColumnScope.() -> Unit)
+) {
+    SettingItemMultipleLineBackground(
+        stringResource(R.string.setting_option_name_color_blind_type),
+        stringResource(R.string.setting_option_expl_color_blind_type),
+        true
+    ) {
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onClick
+        ) {
+            Icon(Icons.Filled.ColorLens, contentDescription = null)
             Box(modifier = Modifier.width(10.dp))
             buttonText()
         }

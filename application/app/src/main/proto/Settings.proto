@@ -11,9 +11,10 @@ enum FilterType {
 }
 
 enum ColorBlindType {
-    COLOR_BLIND_PROTANOPIA = 0;
-    COLOR_BLIND_DEUTERANOPIA = 1;
-    COLOR_BLIND_TRITANOPI = 2;
+    COLOR_BLIND_NONE = 0;
+    COLOR_BLIND_PROTANOPIA = 1;
+    COLOR_BLIND_DEUTERANOPIA = 2;
+    COLOR_BLIND_TRITANOPIA = 3;
 }
 
 message SettingProto {
@@ -21,4 +22,5 @@ message SettingProto {
   bool removeGlare = 2;
   int32 colorSensitivity = 3;
   FilterType defaultFilterType = 4;
+  ColorBlindType colorBlindType = 5;
 }

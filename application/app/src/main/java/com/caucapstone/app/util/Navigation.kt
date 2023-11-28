@@ -15,7 +15,7 @@ import com.caucapstone.app.view.MainScreenNavItem
 import com.caucapstone.app.view.SplashScreen
 
 fun NavController.navigateBack() {
-    if (backQueue.size > 2) {
+    if (currentBackStack.value.size > 2) {
         popBackStack()
     }
 }

@@ -1,9 +1,10 @@
 package com.caucapstone.app.viewmodel
 
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.caucapstone.app.ColorBlindType
 import com.caucapstone.app.FilterType
 import com.caucapstone.app.SettingProto
 import com.caucapstone.app.data.proto.SettingProtoRepository
@@ -18,10 +19,17 @@ class SettingViewModel @Inject constructor(
 ) : ViewModel() {
     private val _settingFlow = settingProtoRepository.flow
     private val _filterTypeExpanded = mutableStateOf(false)
+    private val _colorBlindTypeExpanded = mutableStateOf(false)
     val settingFlow: Flow<SettingProto> = _settingFlow
-    val filterTypeExpanded: MutableState<Boolean> = _filterTypeExpanded
+    val filterTypeExpanded: State<Boolean> = _filterTypeExpanded
+    val colorBlindTypeExpanded: State<Boolean> = _colorBlindTypeExpanded
 
-    // Write
+    fun setFilterTypeExpanded(value: Boolean) {
+        _filterTypeExpanded.value = value
+    }
+    fun setColorBlindTypeExpanded(value: Boolean) {
+        _colorBlindTypeExpanded.value = value
+    }
     fun setDocMode(value: Boolean) {
         viewModelScope.launch {
             settingProtoRepository.setDocMode(value)
@@ -40,6 +48,11 @@ class SettingViewModel @Inject constructor(
     fun setDefaultFilterType(value: FilterType) {
         viewModelScope.launch {
             settingProtoRepository.setDefaultFilterType(value)
+        }
+    }
+    fun setColorBlindType(value: ColorBlindType) {
+        viewModelScope.launch {
+            settingProtoRepository.setColorBlindType(value)
         }
     }
 }

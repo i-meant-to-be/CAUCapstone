@@ -3,6 +3,7 @@ package com.caucapstone.app.data.proto
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
+import com.caucapstone.app.ColorBlindType
 import com.caucapstone.app.FilterType
 import com.caucapstone.app.SettingProto
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -52,6 +53,15 @@ class SettingProtoRepository @Inject constructor(
             settingProto
                 .toBuilder()
                 .setDefaultFilterType(value)
+                .build()
+        }
+    }
+
+    suspend fun setColorBlindType(value: ColorBlindType) {
+        dataStore.updateData { settingProto ->
+            settingProto
+                .toBuilder()
+                .setColorBlindType(value)
                 .build()
         }
     }

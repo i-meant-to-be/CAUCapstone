@@ -22,6 +22,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,18 +32,19 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.caucapstone.app.ColorBlindType
 import com.caucapstone.app.FilterType
 import com.caucapstone.app.R
-import com.caucapstone.app.data.globalPaddingValue
 import com.caucapstone.app.viewmodel.CameraViewModel
 
 @Composable
 fun CameraContent(viewModel: CameraViewModel = hiltViewModel()) {
-    val sliderValue = remember { mutableStateOf(0f) }
+    val sliderValue = remember { mutableFloatStateOf(0f) }
     val colorCodes = remember { mutableStateOf(Triple(1, 2, 3)) }
     val colorName = remember { mutableStateOf("초록") }
     val currFilterType = remember { mutableStateOf(FilterType.FILTER_NONE) }
 
+    /*
     Box(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier
@@ -58,6 +60,36 @@ fun CameraContent(viewModel: CameraViewModel = hiltViewModel()) {
         CameraShotButtonWithRGBIndicator(
             Triple(1, 2, 3),
             "초록"
+        )
+    }
+
+     */
+    PreviewAndFilter(
+        currFilterType = currFilterType.value,
+        sliderValue = sliderValue.floatValue,
+        rgb = {rgb -> if (rgb != null) { colorCodes.value = rgb} },
+        approxColorName = { approxColorName -> if (approxColorName != null) { colorName.value = approxColorName} },
+        //일단 deuteranopia로 지정해둠-----------------------------------------------------------------------------------------------------색각 이상 종류 변경시 여기 변경하면 됨
+        blindType = ColorBlindType.COLOR_BLIND_DEUTERANOPIA
+    )
+    Box(
+        contentAlignment = Alignment.TopCenter,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(15.dp)
+    ) {
+        TopOptionBar(
+            filterType = currFilterType.value,
+            onClick = { filterType -> currFilterType.value = filterType },
+            sliderValue = sliderValue.floatValue,
+            onSliderValueChange = { newValue -> sliderValue.floatValue = newValue }
+        )
+        CameraCrosshair()
+        CameraShotButtonWithRGBIndicator(
+            colorCodes = colorCodes.value,
+            colorName = colorName.value,
+            // 카메라 촬영 시의 작업을 여기서 구현 (onButtonClick)
+            onButtonClick = {}
         )
     }
 }
@@ -79,7 +111,8 @@ fun BlackModeSlider(
 @Composable
 fun CameraShotButtonWithRGBIndicator(
     colorCodes: Triple<Int, Int, Int>,
-    colorName: String
+    colorName: String,
+    onButtonClick: () -> Unit
 ) {
     Box(
         contentAlignment = Alignment.CenterEnd,
@@ -114,7 +147,7 @@ fun CameraShotButtonWithRGBIndicator(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
                 ),
-                onClick = {}
+                onClick = onButtonClick
             ) {
 
             }
@@ -163,7 +196,7 @@ fun TopOptionBar(
         modifier = Modifier.fillMaxWidth()
     ) {
         BlackModeSlider(sliderValue, onSliderValueChange)
-        Row() {
+        Row {
             ReducibleRadioButton(
                 value = filterType == FilterType.FILTER_NONE,
                 onClick = { onClick(FilterType.FILTER_NONE) },

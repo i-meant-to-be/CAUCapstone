@@ -69,10 +69,15 @@ fun FileScreen(
             .padding(start = globalPaddingValue, end = globalPaddingValue)
     ) {
         if (items.isEmpty()) {
-            UniversalIndicator(
-                Icons.Filled.ErrorOutline,
-                stringResource(R.string.string_no_image)
-            )
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                UniversalIndicator(
+                    Icons.Filled.ErrorOutline,
+                    stringResource(R.string.string_no_image)
+                )
+            }
         }
         else {
             LazyColumn() {

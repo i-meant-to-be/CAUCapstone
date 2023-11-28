@@ -35,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,9 +53,10 @@ import coil.request.ImageRequest
 import com.caucapstone.app.R
 import com.caucapstone.app.data.globalPaddingValue
 import com.caucapstone.app.data.room.Image
+import com.caucapstone.app.util.createNotificationChannel
+import com.caucapstone.app.util.showSimpleNotification
 import com.caucapstone.app.viewmodel.ImageViewViewModel
 import com.chaquo.python.Python
-import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -74,6 +76,11 @@ fun ImageViewScreen(
     val image = viewModel.getImageById(id)
     val path = if (!viewModel.isImageDeleted.value) "${context.filesDir}/${image.id}.png" else ""
     val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(key1 = 1) {
+        createNotificationChannel("NotificationChannel", context)
+        showSimpleNotification(context, "NotificationChannel", 0, "Title", "Content")
+    }
 
     if (viewModel.dialogState.value == 1) {
         UniversalDialog(
@@ -144,22 +151,18 @@ fun ImageViewScreen(
                 expanded = viewModel.bottomBarExpanded.value,
                 onExpandClick = { viewModel.reverseBottomBarExpanded() },
                 onProcessClick = {
+                     viewModel.processImage()
+                    /*
                     val imageId = viewModel.getUUID()
                     val outputStream = context.openFileOutput("${imageId}.png", Context.MODE_PRIVATE)
-
-                    coroutineScope.launch {
-                        val bitmap = imageProcess(path)
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                        viewModel.addImageToDatabase(
-                            imageId,
-                            "(윤곽선 처리) ${image.caption}",
-                            image.id
-                        )
-                    }
-
-
-
+                    val imageProcessRequest: WorkRequest =
+                        OneTimeWorkRequestBuilder<ImageProcessWorker>().build()
+                    val builder = Data.Builder()
+                    builder.putString("KEY_IMAGE_PATH", path)
+                    WorkManager.getInstance(context).enqueue(imageProcessRequest)
                     outputStream.close()
+
+                     */
                 },
                 image = if (!viewModel.isImageDeleted.value) image else Image.getDefaultInstance()
             )

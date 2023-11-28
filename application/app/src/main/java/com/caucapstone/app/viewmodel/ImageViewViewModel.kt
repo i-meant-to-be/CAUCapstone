@@ -6,8 +6,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import com.caucapstone.app.data.room.DatabaseModule
 import com.caucapstone.app.data.room.Image
+import com.caucapstone.app.util.ImageProcessWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -20,6 +23,7 @@ class ImageViewViewModel @Inject constructor(
     private val _dialogState = mutableStateOf(0)
     private val _isImageDeleted = mutableStateOf(false)
     private val _bottomBarExpanded = mutableStateOf(false)
+    private val _workManager = WorkManager.getInstance(application.applicationContext)
     private val _databaseDao = DatabaseModule
         .provideAppDatabase(application.applicationContext)
         .imageDao()
@@ -76,5 +80,8 @@ class ImageViewViewModel @Inject constructor(
         }
 
         return uuid.toString()
+    }
+    fun processImage(){
+        _workManager.enqueue(OneTimeWorkRequest.from(ImageProcessWorker::class.java))
     }
 }

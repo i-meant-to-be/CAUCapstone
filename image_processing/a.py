@@ -32,9 +32,9 @@ def separate_color(value, height, width, h):
 	mask = None
 	if h > 178 or h < 2:
 		mask = cv.inRange(img_hsv, np.array([0,10,10]), np.array([1,255,255]))
-		mask = cv.add(mask, cv.inRange(img_hsv, np.array([179,0,0]), np.array([180,255,255]) ))
+		mask = cv.add(mask, cv.inRange(img_hsv, np.array([179,0,0]), np.array([180,255,255])a ))
 	else:
-		mask = cv.inRange(img_hsv, np.array(h,0,0]), np.array(h,255,255])) # mask for the i-th color(center[i])
+		mask = cv.inRange(img_hsv, np.array([h,0,0]), np.array([h,255,255])) # mask for the i-th color(center[i])
 	if kern_size > 1:
 		mask = cv.dilate(cv.erode(mask, kern), kern) # erode then dilate mask to get rid of mess(pixelated parts)
 	contours, hierarchy = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE) # create contour along mask

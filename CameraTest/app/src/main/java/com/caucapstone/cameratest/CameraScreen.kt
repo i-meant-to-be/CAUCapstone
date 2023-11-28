@@ -1,6 +1,12 @@
 package com.caucapstone.cameratest
 
+import android.content.ContentResolver
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,13 +29,19 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 
 
 enum class FilterType {
@@ -42,19 +54,24 @@ enum class FilterType {
 @Composable
 fun CameraScreen() {
     val sliderValue = remember { mutableStateOf(0f) }
-    val colorCodes = remember { mutableStateOf(Triple(1, 2, 3)) }
-    val colorName = remember { mutableStateOf("초록") }
     val currFilterType = remember { mutableStateOf(FilterType.FILTER_NONE) }
+    var imageUri by remember { mutableStateOf(EMPTY_IMAGE_URI) }
+    var bitmap : Bitmap? = null
+    val context = LocalContext.current
+
 
     PreviewAndFilter(
         currFilterType = currFilterType.value,
         sliderValue = sliderValue.value,
-        rgb = {rgb -> if (rgb != null) { colorCodes.value = rgb} },
-        approxColorName = { approxColorName -> if (approxColorName != null) { colorName.value = approxColorName} },
 
         //일단 deuteranopia로 지정해둠-----------------------------------------------------------------------------------------------------색각 이상 종류 변경시 여기 변경하면 됨
-        blindType = TYPE_NUM_DEUTERANOPIA
+        blindType = TYPE_NUM_PROTANOPIA,
+        onImageFile = { file ->
+            imageUri = file.toUri()
+        }
     )
+    //-----------------------------------------------------------------------------------------------------------------------------------capture한 이미지 bitmap 여기서 반환
+    bitmap = uriToBitmap(context,imageUri)
     Box(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier
@@ -68,12 +85,16 @@ fun CameraScreen() {
             onSliderValueChange = { newValue -> sliderValue.value = newValue }
         )
         CameraCrosshair()
-        CameraShotButtonWithRGBIndicator(
-            colorCodes = colorCodes.value,
-            colorName = colorName.value,
-            // 카메라 촬영 시의 작업을 여기서 구현 (onButtonClick)
-            onButtonClick = {}
-        )
+//----------------------------------------------------------------------------------------- bitmap정상적으로 받아오는지 체크해봤음
+//                                                                                          참고로 생성된 모든 이미지는 90도 돌아가 있을것이니 출력을 정상적인 방향으로 하려면 rotation해야함.
+//                                                                                          참고 : PreviewAndFilter 101줄 정도쯤
+//        if(bitmap != null) {
+//            Image(
+//                bitmap = bitmap!!.asImageBitmap(),
+//                contentDescription = null,
+//                modifier = Modifier.size(128.dp)
+//            )
+//        }
     }
 }
 
@@ -95,7 +116,8 @@ fun BlackModeSlider(
 @Composable
 fun CameraShotButtonWithRGBIndicator(
     colorCodes: Triple<Int, Int, Int>,
-    colorName: String,
+    approxColorCodes: Triple<Int, Int, Int>,
+    approxColorName: String,
     onButtonClick: () -> Unit
 ) {
     Box(
@@ -112,10 +134,12 @@ fun CameraShotButtonWithRGBIndicator(
                 modifier = Modifier
                     .size(300.dp, 40.dp)
                     .clip(RoundedCornerShape(size = 30.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                    .background(Color(approxColorCodes.first,                               //대표값의 colorcode 받아와서 배경색 처리함.
+                                approxColorCodes.second,                                    //대표값으로 하니까 뭔가 좀 오차가 많이 느껴져서 실제값(ColorCodes)으로 처리해도 괜찮을거 같긴한데
+                                approxColorCodes.third))                                    //일단 배경색을 코드값으로 하고싶어서 글자색을 어느정도 보색으로 처리해야할거 같다는 생각이 듦
             ) {
                 Text(
-                    "${colorCodes.first}, ${colorCodes.second}, ${colorCodes.third} / $colorName",
+                    "${colorCodes.first}, ${colorCodes.second}, ${colorCodes.third} / $approxColorName",
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                             alpha = 0.8f
@@ -222,3 +246,18 @@ fun ReducibleRadioButton(
         if (value) Text(label)
     }
 }
+
+fun uriToBitmap(context: Context, imageUri: Uri): Bitmap? {
+    val contentResolver: ContentResolver = context.contentResolver
+    return try {
+        // Uri를 통해 이미지를 읽어옴
+        val inputStream = contentResolver.openInputStream(imageUri)
+
+        // BitmapFactory를 사용하여 InputStream에서 Bitmap으로 변환
+        BitmapFactory.decodeStream(inputStream)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+val EMPTY_IMAGE_URI: Uri = Uri.parse("file://dev/null")

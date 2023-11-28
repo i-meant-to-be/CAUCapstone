@@ -43,7 +43,7 @@ object ColorToText {
     }
 
     //hsv값에 따라 가장 가까운 색상 선택하여 이름 반환
-    private fun colorSortHsv(table: Array<Array<String?>>, r: Int, g: Int, b: Int): String? {
+    private fun colorSortHsv(table: Array<Array<String>>, r: Int, g: Int, b: Int): Array<String> {
         val colorTableHsv = Array(table.size) { FloatArray(3) }
         val diff = DoubleArray(table.size)
 
@@ -61,15 +61,16 @@ object ColorToText {
             val diffS = abs(hsv[1] - colorTableHsv[j][1])
             val diffV = abs(hsv[2] - colorTableHsv[j][2])
 
+
             //근사 색깔 결정 가중치 조절
-            diff[j] = (diffH * diffH * 4
-                    + diffS
-                    + diffV
+            diff[j] = (diffH
+                    + diffS *(1/(5*hsv[1]+0.1))
+                    + diffV *(1/(5*hsv[2]+0.1))
                     ).toDouble()
         }
 
-        val minIndex = diff.indices.minByOrNull { diff[it] }
-        return table[minIndex!!][0]
+        val minIndex = diff.indices.minByOrNull { diff[it] }!!
+        return table[minIndex]
     }
 
     //rgb값을 hsv값으로 변환
@@ -118,10 +119,10 @@ object ColorToText {
         return floatArray
     }
 
-    fun analyzer(r: Int, g: Int, b: Int): String? {
+    fun analyzer(r: Int, g: Int, b: Int): Array<String> {
 
         //대표 색상 table [한국산업표준 색이름-계통색) : 203가지]
-        val colorTableKor: Array<Array<String?>> = arrayOf(
+        val colorTableKor: Array<Array<String>> = arrayOf(
             arrayOf("빨강", "BB", "46", "42"),
             arrayOf("선명한 빨강", "BF", "3B", "3C"),
             arrayOf("밝은 빨강", "DD", "53", "4A"),
@@ -479,8 +480,8 @@ object ColorToText {
 
 
         //hsv로 근사값 판별
-//        return colorSortHsv(colorTableKor, r, g, b)
+        return colorSortHsv(colorTableKor, r, g, b)
         //rgb로 근사값 판별
-        return colorSortRgb(colorTableCss, r, g, b)
+//        return colorSortRgb(colorTableKor, r, g, b)
     }
 }

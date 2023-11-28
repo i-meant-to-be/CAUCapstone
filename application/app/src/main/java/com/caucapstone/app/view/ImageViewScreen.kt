@@ -1,10 +1,6 @@
 package com.caucapstone.app.view
 
 import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -28,10 +24,12 @@ import androidx.compose.material.icons.filled.PublishedWithChanges
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,7 +44,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -56,10 +53,7 @@ import com.caucapstone.app.data.room.Image
 import com.caucapstone.app.util.createNotificationChannel
 import com.caucapstone.app.util.showSimpleNotification
 import com.caucapstone.app.viewmodel.ImageViewViewModel
-import com.chaquo.python.Python
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileInputStream
+import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
 private const val DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss"
@@ -87,14 +81,51 @@ fun ImageViewScreen(
             onDismissRequest = { viewModel.setDialogState(0) },
             text = { Text(stringResource(R.string.dialog_delete_image)) },
             onConfirm = {
-                viewModel.deleteImage(id)
-                val imageFile = File(context.filesDir, "${id}.png")
-                if (imageFile.exists()) {
-                    imageFile.delete()
-                    viewModel.setImageDeleted()
-                }
+                viewModel.deleteImageOnDatabase(id)
+                viewModel.deleteImageOnStorage("${context.filesDir}/${image.id}.png")
                 onNavigateBackToRoot()
+            },
+            onDismiss = {
+
             }
+        )
+    }
+
+    if (viewModel.dialogState.value == 2) {
+        UniversalDialog(
+            onDismissRequest = {  },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    CircularProgressIndicator()
+                    Box(modifier = Modifier.height(20.dp))
+                    Text(stringResource(R.string.dialog_processing_image))
+                }
+            }
+        )
+    }
+
+    if (viewModel.dialogState.value == 3) {
+        UniversalDialog(
+            onDismissRequest = { viewModel.setDialogState(0) },
+            text = {
+                OutlinedTextField(
+                    value = viewModel.imageEditTextFieldValue.value,
+                    onValueChange = { newValue -> viewModel.setImageEditTextFieldValue(newValue) },
+                    label = { Text(stringResource(R.string.string_edit_image_caption)) },
+                    singleLine = true,
+                    enabled = true,
+                    maxLines = 1,
+                    shape = RoundedCornerShape(15.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            onConfirm = {
+                viewModel.updateImage(image.copy(caption = viewModel.imageEditTextFieldValue.value))
+            },
+            confirmButtonLabel = "수정"
         )
     }
 
@@ -104,31 +135,13 @@ fun ImageViewScreen(
                 title = {  },
                 onClick = onBackNavigate,
                 actions = {
-                    IconButton(onClick = {
-                        val imageUri = FileProvider.getUriForFile(
-                            context,
-                            "com.caucapstone.app.provider",
-                            File(context.filesDir, "${image.id}.png")
-                        )
-                        val sendIntent: Intent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_STREAM, imageUri)
-                            type = "image/png"
-                        }
-                        val shareIntent = Intent.createChooser(sendIntent, null)
-
-                        context.startActivity(shareIntent, null)
-                    }) {
+                    IconButton(onClick = { viewModel.shareImage(context, path) }) {
                         Icon(Icons.Filled.Share, null)
                     }
-                    IconButton(onClick = {
-
-                    }) {
+                    IconButton(onClick = { viewModel.setDialogState(3) }) {
                         Icon(Icons.Filled.Edit, null)
                     }
-                    IconButton(onClick = {
-                        viewModel.setDialogState(1)
-                    }) {
+                    IconButton(onClick = { viewModel.setDialogState(1) }) {
                         Icon(Icons.Filled.Delete, null)
                     }
                 }
@@ -151,20 +164,22 @@ fun ImageViewScreen(
                 expanded = viewModel.bottomBarExpanded.value,
                 onExpandClick = { viewModel.reverseBottomBarExpanded() },
                 onProcessClick = {
-                     viewModel.processImage()
-                    /*
-                    val imageId = viewModel.getUUID()
-                    val outputStream = context.openFileOutput("${imageId}.png", Context.MODE_PRIVATE)
-                    val imageProcessRequest: WorkRequest =
-                        OneTimeWorkRequestBuilder<ImageProcessWorker>().build()
-                    val builder = Data.Builder()
-                    builder.putString("KEY_IMAGE_PATH", path)
-                    WorkManager.getInstance(context).enqueue(imageProcessRequest)
-                    outputStream.close()
-
-                     */
+                    viewModel.setDialogState(2)
+                    coroutineScope.launch {
+                        val processedImageId = viewModel.processImage(context, path)
+                        viewModel.addImageToDatabase(
+                            Image(
+                                id = processedImageId,
+                                caption = "(윤곽선 처리) + ${image.caption}",
+                                originId = id,
+                                canBeProcessed = false
+                            )
+                        )
+                        viewModel.updateImage(image.copy(canBeProcessed = false))
+                    }
                 },
-                image = if (!viewModel.isImageDeleted.value) image else Image.getDefaultInstance()
+                image = if (!viewModel.isImageDeleted.value) image else Image.getDefaultInstance(),
+                buttonEnabled = if (!viewModel.isImageDeleted.value) image.canBeProcessed else false
             )
         }
     }
@@ -199,7 +214,8 @@ fun ImageViewBottomBar(
     expanded: Boolean,
     onExpandClick: () -> Unit,
     onProcessClick: () -> Unit,
-    image: Image
+    image: Image,
+    buttonEnabled: Boolean = true
 ) {
     val height = animateDpAsState(
         targetValue = if (expanded) 220.dp else 0.dp,
@@ -254,7 +270,8 @@ fun ImageViewBottomBar(
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                    onClick = onProcessClick
+                    onClick = onProcessClick,
+                    enabled = buttonEnabled
                 ) {
                     Icon(Icons.Filled.PublishedWithChanges, null)
                     Box(modifier = Modifier.width(globalPaddingValue))
@@ -291,22 +308,4 @@ fun ImageViewBottomBarItem(
             )
         )
     }
-}
-
-fun imageProcess(path: String): Bitmap {
-    val py = Python.getInstance()
-    val module = py.getModule("test")
-    val byteArrayOutputStream = ByteArrayOutputStream()
-    val bitmap = BitmapFactory.decodeStream(FileInputStream(File(path)))
-
-    bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
-    val encodedImage = module.callAttr(
-        "test",
-        byteArrayOutputStream.toByteArray(),
-        bitmap.height,
-        bitmap.width
-    ).toString().substring(2)
-    byteArrayOutputStream.close()
-    val imageBytes = Base64.decode(encodedImage, Base64.DEFAULT)
-    return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
 }

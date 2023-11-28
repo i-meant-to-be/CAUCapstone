@@ -19,7 +19,7 @@ data class Image(
     val localDateTime: LocalDateTime = LocalDateTime.now(),
 
     @ColumnInfo(name = "image_is_processed")
-    val isProcessed: Boolean = false,
+    val canBeProcessed: Boolean = true,
 
     @ColumnInfo(name = "image_origin_id")
     val originId: String?
@@ -28,6 +28,22 @@ data class Image(
         fun getDefaultInstance(): Image {
             return Image("", "", LocalDateTime.now(), false, "")
         }
+    }
+
+    fun copy(
+        id: String?,
+        caption: String?,
+        localDateTime: LocalDateTime?,
+        canBeProcessed: Boolean?,
+        originId: String?
+    ): Image {
+        return Image(
+            id = id ?: this.id,
+            caption = caption ?: this.caption,
+            localDateTime = localDateTime ?: this.localDateTime,
+            canBeProcessed = canBeProcessed ?: this.canBeProcessed,
+            originId = originId ?: this.originId
+        )
     }
 }
 

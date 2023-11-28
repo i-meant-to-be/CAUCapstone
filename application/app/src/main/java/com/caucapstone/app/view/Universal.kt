@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.caucapstone.app.R
 
@@ -66,7 +67,7 @@ fun UniversalIndicator(
         )
         Text(
             message,
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.titleLarge.copy(textAlign = TextAlign.Center)
         )
     }
 }
@@ -75,26 +76,32 @@ fun UniversalIndicator(
 fun UniversalDialog(
     onDismissRequest: () -> Unit,
     text: @Composable () -> Unit,
-    onConfirm: () -> Unit = {},
-    onDismiss: () -> Unit = {}
+    onConfirm: (() -> Unit)? = null,
+    onDismiss: (() -> Unit)? = null,
+    confirmButtonLabel: String? = null,
+    dismissButtonLabel: String? = null
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
         text = text,
         confirmButton = {
-            TextButton(onClick = {
-                onDismissRequest()
-                onConfirm()
-            }) {
-                Text(stringResource(R.string.dialog_universal_dialog_yes))
+            if (onConfirm != null) {
+                TextButton(onClick = {
+                    onDismissRequest()
+                    onConfirm()
+                }) {
+                    Text(confirmButtonLabel ?: stringResource(R.string.dialog_universal_dialog_yes))
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = {
-                onDismissRequest()
-                onDismiss()
-            }) {
-                Text(stringResource(R.string.dialog_universal_dialog_no))
+            if (onDismiss != null) {
+                TextButton(onClick = {
+                    onDismissRequest()
+                    onDismiss()
+                }) {
+                    Text(dismissButtonLabel ?: stringResource(R.string.dialog_universal_dialog_no))
+                }
             }
         }
     )

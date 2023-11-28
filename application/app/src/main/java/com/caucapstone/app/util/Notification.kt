@@ -36,7 +36,7 @@ fun showSimpleNotification(
     priority: Int = NotificationCompat.PRIORITY_DEFAULT
 ) {
     val builder = NotificationCompat.Builder(context, channelId)
-        .setSmallIcon(R.drawable.ic_launcher_foreground)
+        .setSmallIcon(R.drawable.logo)
         .setContentTitle(textTitle)
         .setContentText(textContent)
         .setPriority(priority)

@@ -1,0 +1,17 @@
+contourpy
+cycler
+daltonize
+fonttools
+joblib
+kiwisolver
+matplotlib
+numpy
+opencv-python
+packaging
+Pillow
+pyparsing
+python-dateutil
+scikit-learn
+scipy
+six
+threadpoolctl

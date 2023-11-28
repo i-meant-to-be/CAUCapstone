@@ -11,10 +11,14 @@
     <string name="string_no_image">등록된 이미지가 없어요.</string>
     <string name="string_image_caption">이미지 설명</string>
     <string name="string_image_process">윤곽선 처리</string>
+    <string name="string_edit_image_caption">새 이미지 캡션</string>
+    <string name="string_request_camera_permission">앱을 정상적으로 사용할 수 있도록, 아래 버튼을 눌러 카메라 사용 권한을 허용해주세요.</string>
+    <string name="string_grant_permission">카메라 권한 요청</string>
 
     <string name="dialog_universal_dialog_yes">네</string>
     <string name="dialog_universal_dialog_no">아니오</string>
     <string name="dialog_delete_image">사진을 삭제하실 건가요?</string>
+    <string name="dialog_processing_image">사진을 처리하고 있습니다…</string>
 
     <string name="setting_option_name_doc_mode">"문서 모드</string>
     <string name="setting_option_name_remove_glare">글레어 제거</string>

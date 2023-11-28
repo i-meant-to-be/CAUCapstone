@@ -96,7 +96,9 @@ fun FileScreen(
             .padding(globalPaddingValue)
     ) {
         FloatingActionButton(
-            onClick = { onNavigate(NestedNavItem.ImageAddScreenItem.route) }
+            onClick = { onNavigate(NestedNavItem.ImageAddScreenItem.route) },
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
         ) {
             Icon(Icons.Filled.Add, contentDescription = null)
         }

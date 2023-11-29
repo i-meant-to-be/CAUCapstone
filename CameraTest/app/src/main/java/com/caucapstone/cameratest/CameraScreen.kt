@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -57,6 +58,7 @@ fun CameraScreen() {
     val currFilterType = remember { mutableStateOf(FilterType.FILTER_NONE) }
     var imageUri by remember { mutableStateOf(EMPTY_IMAGE_URI) }
     var bitmap : Bitmap? = null
+    var blindType by remember { mutableStateOf(TYPE_NUM_NORMAL) }
     val context = LocalContext.current
 
 
@@ -72,6 +74,9 @@ fun CameraScreen() {
     )
     //-----------------------------------------------------------------------------------------------------------------------------------capture한 이미지 bitmap 여기서 반환
     bitmap = uriToBitmap(context,imageUri)
+    if( bitmap != null) {
+        bitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width/2, bitmap.height/2, true)
+    }
     Box(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier
@@ -82,7 +87,9 @@ fun CameraScreen() {
             filterType = currFilterType.value,
             onClick = { filterType -> currFilterType.value = filterType },
             sliderValue = sliderValue.value,
-            onSliderValueChange = { newValue -> sliderValue.value = newValue }
+            onSliderValueChange = { newValue -> sliderValue.value = newValue },
+            blindType = blindType,
+            context = context
         )
         CameraCrosshair()
 //----------------------------------------------------------------------------------------- bitmap정상적으로 받아오는지 체크해봤음
@@ -134,9 +141,13 @@ fun CameraShotButtonWithRGBIndicator(
                 modifier = Modifier
                     .size(300.dp, 40.dp)
                     .clip(RoundedCornerShape(size = 30.dp))
-                    .background(Color(approxColorCodes.first,                               //대표값의 colorcode 받아와서 배경색 처리함.
-                                approxColorCodes.second,                                    //대표값으로 하니까 뭔가 좀 오차가 많이 느껴져서 실제값(ColorCodes)으로 처리해도 괜찮을거 같긴한데
-                                approxColorCodes.third))                                    //일단 배경색을 코드값으로 하고싶어서 글자색을 어느정도 보색으로 처리해야할거 같다는 생각이 듦
+                    .background(
+                        Color(
+                            approxColorCodes.first,                               //대표값의 colorcode 받아와서 배경색 처리함.
+                            approxColorCodes.second,                                    //대표값으로 하니까 뭔가 좀 오차가 많이 느껴져서 실제값(ColorCodes)으로 처리해도 괜찮을거 같긴한데
+                            approxColorCodes.third
+                        )
+                    )                                    //일단 배경색을 코드값으로 하고싶어서 글자색을 어느정도 보색으로 처리해야할거 같다는 생각이 듦
             ) {
                 if((approxColorCodes.first+approxColorCodes.second+approxColorCodes.third)/3<100){
                     Text(
@@ -207,7 +218,9 @@ fun TopOptionBar(
     filterType: FilterType,
     onClick: (FilterType) -> Unit,
     sliderValue: Float,
-    onSliderValueChange: (Float) -> Unit
+    onSliderValueChange: (Float) -> Unit,
+    blindType: Int,
+    context: Context
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -228,12 +241,26 @@ fun TopOptionBar(
             )
             ReducibleRadioButton(
                 value = filterType == FilterType.FILTER_STRIPE,
-                onClick = { onClick(FilterType.FILTER_STRIPE) },
+                onClick = {
+                            if(blindType in TYPE_NUM_PROTANOPIA .. TYPE_NUM_TRITANOPIA) {
+                                onClick(FilterType.FILTER_STRIPE)
+                            }
+                            else{
+                                Toast.makeText(context, "설정에서 본인의 색각이상을 선택해주세요", Toast.LENGTH_SHORT).show()
+                            }
+                          },
                 label = "줄무늬 필터"
             )
             ReducibleRadioButton(
                 value = filterType == FilterType.FILTER_DALTONIZED,
-                onClick = { onClick(FilterType.FILTER_DALTONIZED) },
+                onClick = {
+                            if(blindType in TYPE_NUM_PROTANOPIA .. TYPE_NUM_TRITANOPIA){
+                                onClick(FilterType.FILTER_DALTONIZED)
+                            }
+                            else{
+                                Toast.makeText(context, "설정에서 본인의 색각이상을 선택해주세요", Toast.LENGTH_SHORT).show()
+                            }
+                          },
                 label = "색상 조정 필터"
             )
         }

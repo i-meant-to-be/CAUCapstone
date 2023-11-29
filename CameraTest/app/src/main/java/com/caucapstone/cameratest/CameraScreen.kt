@@ -138,14 +138,26 @@ fun CameraShotButtonWithRGBIndicator(
                                 approxColorCodes.second,                                    //대표값으로 하니까 뭔가 좀 오차가 많이 느껴져서 실제값(ColorCodes)으로 처리해도 괜찮을거 같긴한데
                                 approxColorCodes.third))                                    //일단 배경색을 코드값으로 하고싶어서 글자색을 어느정도 보색으로 처리해야할거 같다는 생각이 듦
             ) {
-                Text(
-                    "${colorCodes.first}, ${colorCodes.second}, ${colorCodes.third} / $approxColorName",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                            alpha = 0.8f
+                if((approxColorCodes.first+approxColorCodes.second+approxColorCodes.third)/3<100){
+                    Text(
+                        "${colorCodes.first}, ${colorCodes.second}, ${colorCodes.third} / $approxColorName",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = Color.White.copy(
+                                alpha = 0.8f
+                            )
                         )
                     )
-                )
+                }
+                else {
+                    Text(
+                        "${colorCodes.first}, ${colorCodes.second}, ${colorCodes.third} / $approxColorName",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = 0.8f
+                            )
+                        )
+                    )
+                }
             }
             Box(modifier = Modifier.height(10.dp))
             Button(
@@ -172,7 +184,6 @@ fun CameraCrosshair() {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = 25.dp)
     ) {
         Box(
             modifier = Modifier

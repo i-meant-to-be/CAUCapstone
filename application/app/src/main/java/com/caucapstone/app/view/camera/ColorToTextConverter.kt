@@ -49,7 +49,19 @@ object ColorToTextConverter {
         //table rgb값을 hsv값으로 변경하여 저장
         for (i in table.indices) {
             colorTableHsv[i] =
-                rgbToHsv(table[i][1]!!.toInt(16), table[i][2]!!.toInt(16), table[i][3]!!.toInt(16))
+                rgbToHsv(table[i][1].toInt(16), table[i][2].toInt(16), table[i][3].toInt(16))
+        }
+
+        if (hsv[2] < 0.3) {
+            for (i in table.indices) {
+                var k = 0
+                for (j in 1..3) {
+                    if(table[i][j].toInt(16) <= 59) { k += 1 }
+                }
+                if(k>=3){
+                    return table[i]
+                }
+            }
         }
 
         for (j in table.indices) {
@@ -59,9 +71,9 @@ object ColorToTextConverter {
 
             //근사 색깔 결정 가중치 조절
             diff[j] = (diffH
-                    + diffS *(1/(5*hsv[1]+0.1))
-                    + diffV *(1/(5*hsv[2]+0.1))
-                    ).toDouble()
+                    + diffS * (1 / (2.5 * hsv[1] + 0.1))
+                    + diffV * (1 / (2.5 * hsv[2] + 0.1))
+                    )
         }
 
         val minIndex = diff.indices.minByOrNull { diff[it] }!!

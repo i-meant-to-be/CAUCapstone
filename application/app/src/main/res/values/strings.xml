@@ -7,6 +7,11 @@
 
     <string name="screen_name_image_add">새 이미지 추가</string>
 
+    <string name="notification_processing_image_title">이미지 처리 중</string>
+    <string name="notification_processing_image_text">이미지에 윤곽선이 잘 보이도록 처리하고 있습니다…</string>
+
+    <string name="snackbar_image_has_saved">"촬영된 사진이 파일로 저장되었습니다."</string>
+
     <string name="string_find_image_button">기기에서 이미지 선택</string>
     <string name="string_no_image">등록된 이미지가 없어요.</string>
     <string name="string_image_caption">이미지 설명</string>
@@ -14,6 +19,7 @@
     <string name="string_edit_image_caption">새 이미지 캡션</string>
     <string name="string_request_camera_permission">앱을 정상적으로 사용할 수 있도록, 아래 버튼을 눌러 카메라 사용 권한을 허용해주세요.</string>
     <string name="string_grant_permission">카메라 권한 요청</string>
+    <string name="string_image_datetime">촬영 시각</string>
 
     <string name="dialog_universal_dialog_yes">네</string>
     <string name="dialog_universal_dialog_no">아니오</string>

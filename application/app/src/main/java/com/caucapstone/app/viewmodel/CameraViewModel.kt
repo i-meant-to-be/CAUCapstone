@@ -10,7 +10,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.caucapstone.app.ColorBlindType
 import com.caucapstone.app.FilterType
 import com.caucapstone.app.SettingProto
 import com.caucapstone.app.data.proto.SettingProtoRepository
@@ -33,9 +32,9 @@ class CameraViewModel @Inject constructor(
         .imageDao()
     private val _settingFlow = settingProtoRepository.flow
     private val _currFilterType = mutableStateOf(FilterType.FILTER_NONE)
-    private val _currColorBlindType = mutableStateOf(ColorBlindType.COLOR_BLIND_NONE)
     private val _colorCodes = mutableStateOf(Triple(0, 0, 0))
-    private val _colorName = mutableStateOf("")
+    private val _aprxColorCodes = mutableStateOf(Triple(0, 0, 0))
+    private val _aprxColorName = mutableStateOf("")
     private val _sliderValue = mutableFloatStateOf(0f)
     private val _imageCaptureUseCase = mutableStateOf(
         ImageCapture.Builder()
@@ -49,12 +48,12 @@ class CameraViewModel @Inject constructor(
             .build()
     )
 
+    val aprxColorCodes: State<Triple<Int, Int, Int>> = _aprxColorCodes
+    val colorCodes: State<Triple<Int, Int, Int>> = _colorCodes
+    val aprxColorNames: State<String> = _aprxColorName
     val snackbarHostState: SnackbarHostState = _snackbarHostState
     val settingFlow: Flow<SettingProto> = _settingFlow
     val currFilterType: State<FilterType> = _currFilterType
-    val currColorBlindType: State<ColorBlindType> = _currColorBlindType
-    val colorCodes: State<Triple<Int, Int, Int>> = _colorCodes
-    val colorName: State<String> = _colorName
     val sliderValue: State<Float> = _sliderValue
     val imageCaptureUseCase: State<ImageCapture> = _imageCaptureUseCase
     val imageAnalyzeFilters: State<ImageAnalysis> = _imageAnalyzeFilters
@@ -62,14 +61,14 @@ class CameraViewModel @Inject constructor(
     fun setCurrFilterType(value: FilterType) {
         _currFilterType.value = value
     }
-    fun setColorCodes(a: Int, b: Int, c: Int) {
-        _colorCodes.value = Triple(a, b, c)
-    }
     fun setColorCodes(value: Triple<Int, Int, Int>) {
         _colorCodes.value = value
     }
-    fun setColorName(value: String) {
-        _colorName.value = value
+    fun setAprxColorCodes(value: Triple<Int, Int, Int>) {
+        _aprxColorCodes.value = value
+    }
+    fun setAprxColorName(value: String) {
+        _aprxColorName.value = value
     }
     fun setSliderValue(value: Float) {
         _sliderValue.floatValue = value

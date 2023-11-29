@@ -159,7 +159,7 @@ fun ImageAddScreen(
     }
 }
 
-fun saveImageToInternalStorage(
+private fun saveImageToInternalStorage(
     context: Context,
     uri: Uri,
     id: String

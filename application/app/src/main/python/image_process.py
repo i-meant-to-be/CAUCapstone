@@ -17,71 +17,71 @@ def showgraph_num(x_start,x_end,y_arr):
 def showgraph_img(img):
 	plt.imshow(img)
 	plt.show()
+'''
 
 def separate_color(value, height, width, h):
 	arr = np.frombuffer(bytes(value), dtype=np.uint8)
 	img = cv.imdecode(arr, cv.IMREAD_UNCHANGED)
 	img_bgr = cv.cvtColor(img, cv.COLOR_RGB2BGR)
 	img_hsv = cv.cvtColor(img_bgr, cv.COLOR_BGR2HSV)
-
+	
 	kern_size = int(min(img.shape[:2])*0.004) # choose kernel size based on image dimension
 	kern = np.ones((kern_size,kern_size), np.uint8) # kernel for erode/dilate; bigger number means larger erosion/dilation
-
+	
 	brighten = 60
 
 	mask = None
 	if h > 178 or h < 2:
 		mask = cv.inRange(img_hsv, np.array([0,10,10]), np.array([1,255,255]))
-		mask = cv.add(mask, cv.inRange(img_hsv, np.array([179,0,0]), np.array([180,255,255]) ))
+		mask = cv.add(mask, cv.inRange(img_hsv, np.array([179,0,0]), np.array([180,255,255])))
 	else:
-		mask = cv.inRange(img_hsv, np.array(h,0,0]), np.array(h,255,255])) # mask for the i-th color(center[i])
+		mask = cv.inRange(img_hsv, np.array([h,0,0]), np.array([h,255,255])) # mask for the i-th color(center[i])
 	if kern_size > 1:
 		mask = cv.dilate(cv.erode(mask, kern), kern) # erode then dilate mask to get rid of mess(pixelated parts)
 	contours, hierarchy = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE) # create contour along mask
-
+	
 	selected = cv.bitwise_or(img_bgr, img_bgr, mask=mask)
 	mask = cv.bitwise_not(mask)
 	other = cv.bitwise_or(img_bgr, img_bgr, mask=mask)
 	_,_,v = cv.split(cv.cvtColor(other, cv.COLOR_BGR2HSV))
-
+	
 	lim = 255 - brighten
 	v[ v > lim ] = 255
 	v[ v < lim ] += brighten
-
+	
 	other = cv.cvtColor(v, cv.COLOR_GRAY2BGR)
 	img = cv.cvtColor(cv.drawContours(cv.add(selected, other),contours,-1,(0,0,0),2), cv.COLOR_BGR2RGB)
 	_, a = cv.imencode('.png', img)
-
+	
 	return base64.b64encode(a.tobytes())
-
-'''
-
+	
+	
 def content_isolation(img): #must be hsv image
 	sat_thres = 45      # lower bound val~
 	bright_thres = 100  # ~upper bound val
 	mask = cv.inRange(img, np.array([0,0,bright_thres]), np.array([180,sat_thres,255]))
-
+	
 	white = cv.bitwise_not(np.zeros_like(img))
 	white = cv.bitwise_or(white, white, mask=mask)
 	mask = cv.bitwise_not(mask)
-
+	
 	img_ = cv.cvtColor(img, cv.COLOR_HSV2BGR)
 	img_ = cv.bitwise_or(img_, img_, mask=mask)
 	img_ = cv.add(img_,white)
-
+	
 	return img_
 
-def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=True):
+def process_image(value, height, width, offset, high_pass_filter=False, reduce_glare=True):
 
 	erode_color_mask = True
 	bilateral_filter = True
 	#high_pass_filter = False #aka 'document mode': fills low-saturation/low-brightness with white
 	#reduce_glare = True
-
+	
 	arr = np.frombuffer(bytes(value), dtype=np.uint8)
 	img = cv.imdecode(arr, cv.IMREAD_UNCHANGED)
 	img = cv.cvtColor(img, cv.COLOR_RGB2BGR)
-
+	
 	# glare removal and bilateral filtering(noise removal)
 	if reduce_glare:
 		img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -95,12 +95,12 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 	if bilateral_filter:
 		img = cv.bilateralFilter(img, 15, 75, 75)
 	#showgraph_img(cv.cvtColor(img, cv.COLOR_BGR2RGB))
-
+	
 	# prepare nparrays for optimal k value analysis and KNN color analysis
 	# imgarr_sample = img.reshape((-1,3))
 	img = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 	img_downscaled = cv.resize(img, (int(img.shape[1]/2),int(img.shape[0]/2)))
-
+	
 	# optimal k value analysis via elbow method
 	# compactness index generation for k in range 2~16(inclusive)
 	K_SEARCH_RANGE_START = 4
@@ -115,18 +115,18 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 		criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 10, 1.0) # iteration stop(termination) criteria: max iteration num, iteration stop thres(epsilon)
 		ret,label,center = cv.kmeans(hue, k, None, criteria, 2, cv.KMEANS_RANDOM_CENTERS)
 		label = label.reshape((-1))
-
+	
 		# label: array of each pixel's category info(0 ~ k-1)
 		# center: BGR value of all k colors
 		# ret: compactness measure
-
+	
 		compact_results.append(ret)
 		label_results.append(label)
 		center_results.append(center)
 		#print(ret)
-
+	
 	#showgraph_num(K_SEARCH_RANGE_START, K_SEARCH_RANGE_END+1, compact_results)
-
+	
 	# normalize compactness results
 	min_range = 0
 	max_range = 10
@@ -138,34 +138,34 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 	for i in compact_results:
 		temp = ((i-min_c)*diff_range)/diff_c + min_range
 		compact_normalized.append(temp)
-
+	
 	#showgraph_num(K_SEARCH_RANGE_START, K_SEARCH_RANGE_END+1, compact_normalized)
-
+	
 	# use elbow method on normalized array
 	# let there be a line from (0,compact_normalized[0]) to (K_SEARCH_RANGE_END-1, compact_normalized[-1]).
 	# resolve the distance between every point in the graph of (x, compact_normalized[x]) and the line.
 	# the local maximum of this point-to-line distance graph is the elbow(knee) point.
 	# fancy distance formula from https://stackoverflow.com/questions/40970478/distance-from-a-point-to-a-line
-	diff_x = (K_SEARCH_RANGE_END - K_SEARCH_RANGE_START) // 2
+	diff_x = (K_SEARCH_RANGE_END - K_SEARCH_RANGE_START) // 2 
 	diff_y = min_range - max_range
 	point_line_distance = []
 	den = sqrt(diff_y**2 + diff_x**2)
-
+	
 	for x,y in enumerate(compact_normalized):
 		num = abs(diff_y*x - diff_x*y + diff_x*max_range)
 		point_line_distance.append(num/den)
-
+	
 
 	dist_locmax = loc_max(np.array(point_line_distance), np.greater)[0] # list of local maxima of silhouette score graph
 
-
+	
 	# pick optimal k from point-line distance graph(apply compensation to later elements)
 	a = 1.05                        # compensation constant
 	m = dist_locmax[0]              # index for max val (= k-2)
 	n = point_line_distance[m]*(a**(m*2))   # max silhouette score(initial val: when k=2(m=0))
 	for i in dist_locmax:                # find biggest local maximum, but:
 		current = point_line_distance[i]*(a**(i*2)) # allow up to 10% loss per step(k value increment) for later local maxima(for messy images)
-		if n < current:
+		if n < current: 
 			n = current
 			m = i
 
@@ -201,20 +201,22 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 		else:
 			break
 	'''
-
+ 	
 	k = m*2 + K_SEARCH_RANGE_START
-
+	k += offset
+	if k<2:
+		k=2
 	# perform KNN
 	hue,sat,val = cv.split(img)
 	hue = hue.reshape((-1, 1))
 	hue = np.float32(hue)
 	criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 10, 1.0)
 	ret,label,center = cv.kmeans(hue, k, None, criteria, 4, cv.KMEANS_RANDOM_CENTERS)
-
+	
 	# label: array of each pixel's category info(0 ~ k-1)
 	# center: BGR value of all k colors
 	# ret: compactness measure
-
+	
 	center = np.uint8(center)
 	center = center.flatten()
 	new_img = cv.merge((center[label.flatten()].reshape(img.shape[0],img.shape[1]), sat, val))
@@ -223,7 +225,7 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 	result = new_img
 	#showgraph_img(cv.cvtColor(result, cv.COLOR_HSV2RGB))
 	result_with_contour = new_img
-
+	
 	#make sure that center doesn't have duplicates
 	center = np.unique(center)
 	#print(center)
@@ -254,6 +256,6 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 	_, a = cv.imencode('.png', result_with_contour)
 	_, b = cv.imencode('.png', result)
 	label = label.reshape((height, width))
-
+	
 	return [base64.b64encode(a.tobytes()), base64.b64encode(b.tobytes()), label, center]
 

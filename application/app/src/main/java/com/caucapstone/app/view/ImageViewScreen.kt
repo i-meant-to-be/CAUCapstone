@@ -35,7 +35,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +54,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.caucapstone.app.R
+import com.caucapstone.app.SettingProto
 import com.caucapstone.app.data.globalPaddingValue
 import com.caucapstone.app.data.room.Image
 import com.caucapstone.app.util.createNotificationChannel
@@ -70,7 +75,10 @@ fun ImageViewScreen(
     val context = LocalContext.current
     val image = viewModel.getImageById(id)
     val path = if (!viewModel.isImageDeleted.value) "${context.filesDir}/${image.id}.png" else ""
-    val coroutineScope = rememberCoroutineScope()
+    val data = viewModel.settingFlow.collectAsState(SettingProto.getDefaultInstance()).value
+
+    val notificationTitle = stringResource(R.string.notification_processing_image_title)
+    val notificationText = stringResource(R.string.notification_processing_image_text)
 
     LaunchedEffect(key1 = 1) {
         createNotificationChannel("NotificationChannel", context)
@@ -166,20 +174,31 @@ fun ImageViewScreen(
                 expanded = viewModel.bottomBarExpanded.value,
                 onExpandClick = { viewModel.reverseBottomBarExpanded() },
                 onProcessClick = {
-                    showSimpleNotification(context, "NotificationChannel", 0, "CAUSee", "사진에 윤곽선이 보이도록 처리하고 있습니다...")
+                    showSimpleNotification(
+                        context = context,
+                        channelId = "NotificationChannel",
+                        notificationId = 0,
+                        textTitle = notificationTitle,
+                        textContent = notificationText
+                    )
                     viewModel.setDialogState(2)
 
-                    val processedImageId = viewModel.processImage(context, path)
+                    val processedImageId = viewModel.processImage(
+                        context = context,
+                        originFilePath = path,
+                        docMode = data.docMode,
+                        removeGlare = data.removeGlare,
+                        colorSensitivity = data.colorSensitivity
+                    )
                     viewModel.addImageToDatabase(
                         Image(
                             id = processedImageId,
-                            caption = "(윤곽선 처리) + ${image.caption}",
+                            caption = "(윤곽선 처리) ${image.caption}",
                             originId = id,
                             canBeProcessed = false
                         )
                     )
                     viewModel.updateImage(image.copy(canBeProcessed = false))
-
                 },
                 image = if (!viewModel.isImageDeleted.value) image else Image.getDefaultInstance(),
                 buttonEnabled = if (!viewModel.isImageDeleted.value) image.canBeProcessed else false
@@ -195,6 +214,8 @@ fun ImageViewImage(
     onTap: (Pair<Float, Float>) -> Unit,
     modifier: Modifier
 ) {
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
             .data(path)
@@ -210,9 +231,14 @@ fun ImageViewImage(
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier.pointerInput(Unit) {
-                detectTapGestures { offset -> onTap(Pair(offset.x, offset.y)) }
+                detectTapGestures { offset ->
+                    offsetX = offset.x
+                    offsetY = offset.y
+                    onTap(Pair(offset.x, offset.y))
+                }
             }
         )
+        Text("$offsetX, $offsetY")
     }
 }
 
@@ -265,12 +291,12 @@ fun ImageViewBottomBar(
                     .padding(20.dp)
             ) {
                 ImageViewBottomBarItem(
-                    title = "캡션",
+                    title = stringResource(R.string.string_image_caption),
                     value = image.caption
                 )
                 Box(modifier = Modifier.height(globalPaddingValue))
                 ImageViewBottomBarItem(
-                    title = "촬영 날짜",
+                    title = stringResource(R.string.string_image_datetime),
                     value = image.localDateTime.format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN))
                 )
                 Box(modifier = Modifier.height(globalPaddingValue))

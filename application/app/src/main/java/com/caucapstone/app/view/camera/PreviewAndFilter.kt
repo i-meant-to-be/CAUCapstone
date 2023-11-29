@@ -1,7 +1,9 @@
 package com.caucapstone.app.view.camera
 
+import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ColorMatrix
@@ -33,12 +35,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.caucapstone.app.ColorBlindType
 import com.caucapstone.app.FilterType
+import com.caucapstone.app.R
 import com.caucapstone.app.SettingProto
-import com.caucapstone.app.view.saveImageToInternalStorage
 import com.caucapstone.app.viewmodel.CameraViewModel
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
@@ -63,6 +66,7 @@ fun PreviewAndFilter(
 ) {
     val context = LocalContext.current
     val data = viewModel.settingFlow.collectAsState(SettingProto.getDefaultInstance()).value
+    val snackbarText = stringResource(R.string.snackbar_image_has_saved)
 
     Box(modifier = modifier) {
         val lifecycleOwner = LocalLifecycleOwner.current
@@ -83,8 +87,9 @@ fun PreviewAndFilter(
         )
 
         GlobalVariables.blindType = data.colorBlindType
-        viewModel.setColorCodes(GlobalVariables.aprxRgb)
-        viewModel.setColorName(GlobalVariables.aprxColorName)
+        viewModel.setColorCodes(GlobalVariables.rgb)
+        viewModel.setAprxColorCodes(GlobalVariables.aprxRgb)
+        viewModel.setAprxColorName(GlobalVariables.aprxColorName)
         GlobalVariables.hueCriteria = viewModel.sliderValue.value
         GlobalVariables.filterType = viewModel.currFilterType.value
 
@@ -121,15 +126,15 @@ fun PreviewAndFilter(
                     Image(
                         modifier = modifier,
                         bitmap = it,
-                        contentDescription = "필터 적용",
+                        contentDescription = null,
                         contentScale = ContentScale.Crop
                     )
                 }
             }
             CameraShotButtonWithRGBIndicator(   //-------------------------------------------------클릭시 캡처하려면 여기서 처리해야할거 같아서 옮겼음
-                colorCodes = GlobalVariables.rgb,
-                colorName  = GlobalVariables.aprxColorName,
-                // 카메라 촬영 시의 작업을 여기서 구현 (onButtonClick)
+                colorCodes = viewModel.colorCodes.value,
+                approxColorCodes = viewModel.aprxColorCodes.value,
+                approxColorName = viewModel.aprxColorNames.value,
                 onButtonClick = {
                     coroutineScope.launch {
                         viewModel.imageCaptureUseCase.value.takePicture(context.executor).let { file ->
@@ -144,7 +149,7 @@ fun PreviewAndFilter(
                                 caption = ""
                             )
                             viewModel.snackbarHostState.showSnackbar(
-                                message = "촬영된 사진이 파일로 저장되었습니다.",
+                                message = snackbarText,
                                 duration = SnackbarDuration.Short
                             )
                         }
@@ -155,7 +160,36 @@ fun PreviewAndFilter(
     }
 }
 
-fun saveImageToInternalStorage(
+private fun uriToBitmap(context: Context, imageUri: Uri): Bitmap? {
+    val contentResolver: ContentResolver = context.contentResolver
+    return try {
+        val inputStream = contentResolver.openInputStream(imageUri)
+        BitmapFactory.decodeStream(inputStream)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
+private fun saveImageToInternalStorage(
+    context: Context,
+    uri: Uri,
+    id: String
+) {
+    val originBitmap = uriToBitmap(context, uri)
+    if (originBitmap != null) {
+        val matrix = Matrix()
+        matrix.postRotate(90f)
+        val resultBitmap = Bitmap.createScaledBitmap(originBitmap, originBitmap.width / 2, originBitmap.height / 2, true)
+        val rotatedBitmap = Bitmap.createBitmap(resultBitmap, 0, 0, resultBitmap.width, resultBitmap.height, matrix, true)
+        val outputStream = context.openFileOutput("$id.png", Context.MODE_PRIVATE)
+        rotatedBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        outputStream.close()
+    }
+}
+
+/*
+private fun saveImageToInternalStorage(
     context: Context,
     uri: Uri,
     id: String
@@ -168,6 +202,7 @@ fun saveImageToInternalStorage(
         }
     }
 }
+ */
 
 //-----------------------------------------------------------------------------------------------------
 //RGBA_8888형식으로 RGBbitmap 만드는 함수
@@ -213,14 +248,14 @@ class FilterAnalyzer(private val callBackBitMap: (Bitmap?) -> Unit): ImageAnalys
         val blue = Color.blue(centerColor)
 
         val currentTimestamp = System.currentTimeMillis()
-        if (currentTimestamp - lastAnalyzedTimestamp >= TimeUnit.MILLISECONDS.toMillis(300)) {
+        if (currentTimestamp - lastAnalyzedTimestamp >= TimeUnit.MILLISECONDS.toMillis(500)) {
 
         //ColorToText 클래스 접근해서 근사 대표 색상 받아오기
         val representativeColor = ColorToTextConverter.analyzer(red, green, blue)
 
         GlobalVariables.rgb = Triple(red,green,blue)
         GlobalVariables.aprxColorName = representativeColor[0]
-        GlobalVariables.aprxRgb =  Triple(representativeColor[1].toInt(16),representativeColor[2].toInt(16),representativeColor[3].toInt(16))
+        GlobalVariables.aprxRgb = Triple(representativeColor[1].toInt(16),representativeColor[2].toInt(16),representativeColor[3].toInt(16))
 
         lastAnalyzedTimestamp = currentTimestamp
 
@@ -249,7 +284,7 @@ class FilterAnalyzer(private val callBackBitMap: (Bitmap?) -> Unit): ImageAnalys
 
         val scaledBitmap: Bitmap = Bitmap.createScaledBitmap(inputBitmap, width, height, true)
         val outputBitmap = toGrayscale(scaledBitmap)
-        val v = 10
+        val v = 15
 
         for (x in 0 until width step 2) {
             for (y in 0 until height step 2) {
@@ -410,11 +445,11 @@ class FilterAnalyzer(private val callBackBitMap: (Bitmap?) -> Unit): ImageAnalys
 
                 val diffHue = minOf(abs(hue - criteria), hue + 360 - criteria,criteria + 360 - hue)
                 // 색각이상별로 잘 안보이는 색상(적색계열, 녹색계열, 청색계열)의 hue값에 검정무늬 넣기
-                if ((diffHue <= v) && sat > 0.30 && (x+y)%19 == 1 ) {
-                    val pointColor =Color.argb((255*(1-diffHue/50)).toInt(),0,0,0)
+                if ((diffHue <= v) && sat > 0.30 && (x + y) % 19 == 1 ) {
+                    val pointColor = Color.argb((255 * (1 - diffHue / v)).toInt(),0,0,0)
                     try {
-                        outputBitmap.setPixel(x+1, y, pointColor)
-                        outputBitmap.setPixel(x, y+1, pointColor)
+                        outputBitmap.setPixel(x + 1, y, pointColor)
+                        outputBitmap.setPixel(x, y + 1, pointColor)
                     } catch (_: ArrayIndexOutOfBoundsException) {}
                 }
             }

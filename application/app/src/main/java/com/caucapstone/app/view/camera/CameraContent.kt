@@ -1,5 +1,6 @@
 package com.caucapstone.app.view.camera
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
@@ -28,20 +29,25 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.caucapstone.app.ColorBlindType
 import com.caucapstone.app.FilterType
 import com.caucapstone.app.R
+import com.caucapstone.app.SettingProto
 import com.caucapstone.app.data.globalPaddingValue
 import com.caucapstone.app.viewmodel.CameraViewModel
+import kotlin.math.roundToInt
 
 private val colors = (1..360).map { hue ->
     Color(android.graphics.Color.HSVToColor(floatArrayOf(hue.toFloat(), 1f, 1f)))
@@ -52,6 +58,8 @@ fun CameraContent(
     paddingValues: PaddingValues,
     viewModel: CameraViewModel = hiltViewModel()
 ) {
+    val data = viewModel.settingFlow.collectAsState(SettingProto.getDefaultInstance()).value
+
     PreviewAndFilter(
         modifier = Modifier
             .fillMaxSize()
@@ -70,7 +78,8 @@ fun CameraContent(
             onClick = { filterType -> viewModel.setCurrFilterType(filterType) },
             sliderValue = viewModel.sliderValue.value,
             onSliderValueChange = { newValue -> viewModel.setSliderValue(newValue) },
-            visible = viewModel.currFilterType.value == FilterType.FILTER_SPECIFIC
+            visible = viewModel.currFilterType.value == FilterType.FILTER_SPECIFIC,
+            colorBlindType = data.colorBlindType
         )
         CameraCrosshair()
     }
@@ -130,7 +139,8 @@ fun BlackModeSlider(
 @Composable
 fun CameraShotButtonWithRGBIndicator(
     colorCodes: Triple<Int, Int, Int>,
-    colorName: String,
+    approxColorCodes: Triple<Int, Int, Int>,
+    approxColorName: String,
     onButtonClick: () -> Unit
 ) {
     Box(
@@ -149,14 +159,20 @@ fun CameraShotButtonWithRGBIndicator(
                 modifier = Modifier
                     .size(300.dp, 40.dp)
                     .clip(RoundedCornerShape(size = 30.dp))
-                    .background(color = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Text(
-                    "R${colorCodes.first}, G${colorCodes.second}, B${colorCodes.third} / $colorName",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                            alpha = 0.8f
+                    .background(
+                        Color(
+                            colorCodes.first,                               //대표값의 colorcode 받아와서 배경색 처리함.
+                            colorCodes.second,                                    //대표값으로 하니까 뭔가 좀 오차가 많이 느껴져서 실제값(ColorCodes)으로 처리해도 괜찮을거 같긴한데
+                            colorCodes.third,
+                            (255 * 0.8).roundToInt()
                         )
+                    )
+            ) {
+                val isGray = (approxColorCodes.first + approxColorCodes.second + approxColorCodes.third) / 3 < 80
+                Text(
+                    "${colorCodes.first}, ${colorCodes.second}, ${colorCodes.third} / $approxColorName",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = if (isGray) Color.White.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.8f)
                     )
                 )
             }
@@ -183,9 +199,7 @@ fun CameraCrosshair() {
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 25.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         Box(
             modifier = Modifier
@@ -210,8 +224,11 @@ fun TopOptionBar(
     onClick: (FilterType) -> Unit,
     sliderValue: Float,
     onSliderValueChange: (Float) -> Unit,
-    visible: Boolean
+    visible: Boolean,
+    colorBlindType: ColorBlindType
 ) {
+    val context = LocalContext.current
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
@@ -235,12 +252,28 @@ fun TopOptionBar(
             )
             ReducibleRadioButton(
                 value = filterType == FilterType.FILTER_STRIPE,
-                onClick = { onClick(FilterType.FILTER_STRIPE) },
+                onClick = {
+                    if (colorBlindType in listOf(
+                            ColorBlindType.COLOR_BLIND_TRITANOPIA,
+                            ColorBlindType.COLOR_BLIND_DEUTERANOPIA,
+                            ColorBlindType.COLOR_BLIND_PROTANOPIA
+                    )) {
+                        onClick(FilterType.FILTER_STRIPE)
+                    } else Toast.makeText(context, "설정에서 본인의 색각 이상을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                },
                 label = stringResource(R.string.filter_name_stripe)
             )
             ReducibleRadioButton(
                 value = filterType == FilterType.FILTER_DALTONIZED,
-                onClick = { onClick(FilterType.FILTER_DALTONIZED) },
+                onClick = {
+                    if (colorBlindType in listOf(
+                            ColorBlindType.COLOR_BLIND_TRITANOPIA,
+                            ColorBlindType.COLOR_BLIND_DEUTERANOPIA,
+                            ColorBlindType.COLOR_BLIND_PROTANOPIA
+                    )) {
+                        onClick(FilterType.FILTER_DALTONIZED)
+                    } else Toast.makeText(context, "설정에서 본인의 색각 이상을 선택해주세요.", Toast.LENGTH_SHORT).show()
+                },
                 label = stringResource(R.string.filter_name_daltonized)
             )
         }

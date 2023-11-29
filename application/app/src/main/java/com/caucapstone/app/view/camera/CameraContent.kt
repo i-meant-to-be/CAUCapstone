@@ -1,10 +1,16 @@
 package com.caucapstone.app.view.camera
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,90 +28,103 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.caucapstone.app.ColorBlindType
 import com.caucapstone.app.FilterType
 import com.caucapstone.app.R
+import com.caucapstone.app.data.globalPaddingValue
 import com.caucapstone.app.viewmodel.CameraViewModel
 
-@Composable
-fun CameraContent(viewModel: CameraViewModel = hiltViewModel()) {
-    val sliderValue = remember { mutableFloatStateOf(0f) }
-    val colorCodes = remember { mutableStateOf(Triple(1, 2, 3)) }
-    val colorName = remember { mutableStateOf("초록") }
-    val currFilterType = remember { mutableStateOf(FilterType.FILTER_NONE) }
+private val colors = (1..360).map { hue ->
+    Color(android.graphics.Color.HSVToColor(floatArrayOf(hue.toFloat(), 1f, 1f)))
+}
 
-    /*
-    Box(
-        contentAlignment = Alignment.TopCenter,
+@Composable
+fun CameraContent(
+    paddingValues: PaddingValues,
+    viewModel: CameraViewModel = hiltViewModel()
+) {
+    PreviewAndFilter(
         modifier = Modifier
             .fillMaxSize()
-            .padding(globalPaddingValue)
-    ) {
-        TopOptionBar(
-            viewModel.currFilterType.value,
-            viewModel::setCurrFilterType,
-            sliderValue.value
-        ) { newValue -> sliderValue.value = newValue }
-        CameraCrosshair()
-        CameraShotButtonWithRGBIndicator(
-            Triple(1, 2, 3),
-            "초록"
-        )
-    }
-
-     */
-    PreviewAndFilter(
-        currFilterType = currFilterType.value,
-        sliderValue = sliderValue.floatValue,
-        rgb = {rgb -> if (rgb != null) { colorCodes.value = rgb} },
-        approxColorName = { approxColorName -> if (approxColorName != null) { colorName.value = approxColorName} },
-        //일단 deuteranopia로 지정해둠-----------------------------------------------------------------------------------------------------색각 이상 종류 변경시 여기 변경하면 됨
-        blindType = ColorBlindType.COLOR_BLIND_DEUTERANOPIA
+            .padding(paddingValues)
     )
     Box(
-        contentAlignment = Alignment.TopCenter,
         modifier = Modifier
             .fillMaxSize()
-            .padding(15.dp)
+            .padding(
+                vertical = globalPaddingValue * 2,
+                horizontal = globalPaddingValue
+            )
     ) {
         TopOptionBar(
-            filterType = currFilterType.value,
-            onClick = { filterType -> currFilterType.value = filterType },
-            sliderValue = sliderValue.floatValue,
-            onSliderValueChange = { newValue -> sliderValue.floatValue = newValue }
+            filterType = viewModel.currFilterType.value,
+            onClick = { filterType -> viewModel.setCurrFilterType(filterType) },
+            sliderValue = viewModel.sliderValue.value,
+            onSliderValueChange = { newValue -> viewModel.setSliderValue(newValue) },
+            visible = viewModel.currFilterType.value == FilterType.FILTER_SPECIFIC
         )
         CameraCrosshair()
-        CameraShotButtonWithRGBIndicator(
-            colorCodes = colorCodes.value,
-            colorName = colorName.value,
-            // 카메라 촬영 시의 작업을 여기서 구현 (onButtonClick)
-            onButtonClick = {}
-        )
     }
 }
 
 @Composable
 fun BlackModeSlider(
     value: Float,
-    onValueChange: (Float) -> Unit,
+    visible: Boolean,
+    onValueChange: (Float) -> Unit
 ) {
-    Slider(
-        value = value,
-        onValueChange = onValueChange,
-        steps = 0,
-        valueRange = 0f..100f,
-        modifier = Modifier.fillMaxWidth()
-    )
+    val density = LocalDensity.current
+    val currWidth = LocalConfiguration.current.screenWidthDp
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically {
+            with (density) { -40.dp.roundToPx() }
+        } + fadeIn(initialAlpha = 0.0f),
+        exit = slideOutVertically {
+            with (density) { -40.dp.roundToPx() }
+        } + fadeOut(targetAlpha = 0.0f)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .width((currWidth * 0.8).dp)
+                .clip(RoundedCornerShape(30.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                .padding(
+                    top = 20.dp,
+                    start = 15.dp,
+                    end = 15.dp
+                )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(5.dp)
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(
+                        brush = Brush.horizontalGradient(colors)
+                    )
+            )
+            Slider(
+                value = value,
+                onValueChange = onValueChange,
+                steps = 0,
+                valueRange = 0f..360f,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
 }
 
 @Composable
@@ -116,7 +135,9 @@ fun CameraShotButtonWithRGBIndicator(
 ) {
     Box(
         contentAlignment = Alignment.CenterEnd,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 30.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -128,10 +149,10 @@ fun CameraShotButtonWithRGBIndicator(
                 modifier = Modifier
                     .size(300.dp, 40.dp)
                     .clip(RoundedCornerShape(size = 30.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                    .background(color = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Text(
-                    "${colorCodes.first}, ${colorCodes.second}, ${colorCodes.third} / $colorName",
+                    "R${colorCodes.first}, G${colorCodes.second}, B${colorCodes.third} / $colorName",
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                             alpha = 0.8f
@@ -188,15 +209,20 @@ fun TopOptionBar(
     filterType: FilterType,
     onClick: (FilterType) -> Unit,
     sliderValue: Float,
-    onSliderValueChange: (Float) -> Unit
+    onSliderValueChange: (Float) -> Unit,
+    visible: Boolean
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
         modifier = Modifier.fillMaxWidth()
     ) {
-        BlackModeSlider(sliderValue, onSliderValueChange)
-        Row {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(size = 30.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                .padding(horizontal = 15.dp)
+        ) {
             ReducibleRadioButton(
                 value = filterType == FilterType.FILTER_NONE,
                 onClick = { onClick(FilterType.FILTER_NONE) },
@@ -218,6 +244,8 @@ fun TopOptionBar(
                 label = stringResource(R.string.filter_name_daltonized)
             )
         }
+        Box(modifier = Modifier.height(5.dp))
+        BlackModeSlider(sliderValue, visible, onSliderValueChange)
     }
 }
 

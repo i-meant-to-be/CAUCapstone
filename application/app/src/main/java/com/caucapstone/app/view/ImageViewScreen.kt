@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -53,7 +55,6 @@ import com.caucapstone.app.data.room.Image
 import com.caucapstone.app.util.createNotificationChannel
 import com.caucapstone.app.util.showSimpleNotification
 import com.caucapstone.app.viewmodel.ImageViewViewModel
-import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
 private const val DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss"
@@ -73,7 +74,7 @@ fun ImageViewScreen(
 
     LaunchedEffect(key1 = 1) {
         createNotificationChannel("NotificationChannel", context)
-        showSimpleNotification(context, "NotificationChannel", 0, "Title", "Content")
+        // showSimpleNotification(context, "NotificationChannel", 0, "Title", "Content")
     }
 
     if (viewModel.dialogState.value == 1) {
@@ -158,25 +159,27 @@ fun ImageViewScreen(
             ImageViewImage(
                 context = context,
                 path = path,
+                onTap = { offset -> viewModel.setOffset(offset) },
                 modifier = Modifier.fillMaxWidth()
             )
             ImageViewBottomBar(
                 expanded = viewModel.bottomBarExpanded.value,
                 onExpandClick = { viewModel.reverseBottomBarExpanded() },
                 onProcessClick = {
+                    showSimpleNotification(context, "NotificationChannel", 0, "CAUSee", "사진에 윤곽선이 보이도록 처리하고 있습니다...")
                     viewModel.setDialogState(2)
-                    coroutineScope.launch {
-                        val processedImageId = viewModel.processImage(context, path)
-                        viewModel.addImageToDatabase(
-                            Image(
-                                id = processedImageId,
-                                caption = "(윤곽선 처리) + ${image.caption}",
-                                originId = id,
-                                canBeProcessed = false
-                            )
+
+                    val processedImageId = viewModel.processImage(context, path)
+                    viewModel.addImageToDatabase(
+                        Image(
+                            id = processedImageId,
+                            caption = "(윤곽선 처리) + ${image.caption}",
+                            originId = id,
+                            canBeProcessed = false
                         )
-                        viewModel.updateImage(image.copy(canBeProcessed = false))
-                    }
+                    )
+                    viewModel.updateImage(image.copy(canBeProcessed = false))
+
                 },
                 image = if (!viewModel.isImageDeleted.value) image else Image.getDefaultInstance(),
                 buttonEnabled = if (!viewModel.isImageDeleted.value) image.canBeProcessed else false
@@ -189,6 +192,7 @@ fun ImageViewScreen(
 fun ImageViewImage(
     context: Context,
     path: String,
+    onTap: (Pair<Float, Float>) -> Unit,
     modifier: Modifier
 ) {
     val painter = rememberAsyncImagePainter(
@@ -204,7 +208,10 @@ fun ImageViewImage(
         Image(
             painter = painter,
             contentDescription = null,
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.pointerInput(Unit) {
+                detectTapGestures { offset -> onTap(Pair(offset.x, offset.y)) }
+            }
         )
     }
 }

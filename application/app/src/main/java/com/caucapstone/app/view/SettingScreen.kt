@@ -54,7 +54,7 @@ fun SettingScreen(viewModel: SettingViewModel = hiltViewModel()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(globalPaddingValue)
+            .padding(horizontal = globalPaddingValue)
             .verticalScroll(scrollState)
     ) {
         DocModeSettingItem(
@@ -174,7 +174,10 @@ fun SettingItemSingleLineBackground(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = if (isLastItem) 0.dp else 25.dp)
+            .padding(
+                top = 25.dp,
+                bottom = if (isLastItem) 25.dp else 0.dp
+            )
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -215,7 +218,10 @@ fun SettingItemMultipleLineBackground(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = if (isLastItem) 0.dp else 25.dp)
+            .padding(
+                top = 25.dp,
+                bottom = if (isLastItem) 25.dp else 0.dp
+            )
     ) {
         Column(
             verticalArrangement = Arrangement.Top,

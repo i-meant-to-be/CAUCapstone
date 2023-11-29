@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.FileProvider
 import androidx.lifecycle.MutableLiveData
@@ -27,24 +28,48 @@ import javax.inject.Inject
 class ImageViewViewModel @Inject constructor(
     application: Application
 ) : ViewModel() {
-    private val _dialogState = mutableStateOf(0)
+    private val _dialogState = mutableIntStateOf(0)
     private val _isImageDeleted = mutableStateOf(false)
     private val _bottomBarExpanded = mutableStateOf(false)
     private val _imageEditTextFieldValue = mutableStateOf("")
     private val _databaseDao = DatabaseModule
         .provideAppDatabase(application.applicationContext)
         .imageDao()
+    private val _offset = mutableStateOf(Pair(0f, 0f))
 
     val dialogState: State<Int> = _dialogState
     val bottomBarExpanded: State<Boolean> = _bottomBarExpanded
     val isImageDeleted: State<Boolean> = _isImageDeleted
     val imageEditTextFieldValue: State<String> = _imageEditTextFieldValue
+    val offset: State<Pair<Float, Float>> = _offset
 
-    fun setDialogState(value: Int) {
-        _dialogState.value = value
+    private fun getUUID(): String {
+        val isExists = MutableLiveData(true)
+        var uuid = UUID.randomUUID()
+
+        viewModelScope.launch {
+            while (true) {
+                val queryResult = _databaseDao.isUUIDExists(uuid.toString())
+                if (queryResult.isEmpty()) {
+                    isExists.value = false
+                    break
+                } else {
+                    uuid = UUID.randomUUID()
+                    continue
+                }
+            }
+        }
+
+        return uuid.toString()
     }
-    fun setImageDeleted() {
-        _isImageDeleted.value = true
+    fun setDialogState(value: Int) {
+        _dialogState.intValue = value
+    }
+    fun setOffset(value: Pair<Float, Float>) {
+        _offset.value = value
+    }
+    fun setOffset(a: Float, b: Float) {
+        _offset.value = Pair(a, b)
     }
     fun reverseBottomBarExpanded() {
         _bottomBarExpanded.value = !_bottomBarExpanded.value
@@ -76,25 +101,6 @@ class ImageViewViewModel @Inject constructor(
         viewModelScope.launch {
             _databaseDao.insert(image)
         }
-    }
-    fun getUUID(): String {
-        val isExists = MutableLiveData<Boolean>(true)
-        var uuid = UUID.randomUUID()
-
-        viewModelScope.launch {
-            while (true) {
-                val queryResult = _databaseDao.isUUIDExists(uuid.toString())
-                if (queryResult.isEmpty()) {
-                    isExists.value = false
-                    break
-                } else {
-                    uuid = UUID.randomUUID()
-                    continue
-                }
-            }
-        }
-
-        return uuid.toString()
     }
     fun shareImage(
         context: Context,
@@ -140,7 +146,7 @@ class ImageViewViewModel @Inject constructor(
         val processedImage = BitmapFactory.decodeByteArray(processedImageBytes, 0, processedImageBytes.size)
         processedImage.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
 
-        _dialogState.value = 0
+        _dialogState.intValue = 0
         fileOutputStream.close()
         byteArrayOutputStream.close()
         return imageId

@@ -480,8 +480,8 @@ object ColorToText {
 
 
         //hsv로 근사값 판별
-        return colorSortHsv(colorTableKor, r, g, b)
+        //return colorSortHsv(colorTableKor, r, g, b)
         //rgb로 근사값 판별
-//        return colorSortRgb(colorTableKor, r, g, b)
+        return colorSortRgb(colorTableCss, r, g, b)
     }
 }

@@ -12,7 +12,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 fun CameraPreview(
     modifier: Modifier = Modifier,
     scaleType: PreviewView.ScaleType = PreviewView.ScaleType.FILL_CENTER,
-    onUseCase: (UseCase) -> Unit = { }
+    onUseCase: (UseCase) -> Unit = {}
 ) {
     AndroidView(
         modifier = modifier,

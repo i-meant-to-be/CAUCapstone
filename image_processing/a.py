@@ -1,6 +1,7 @@
 from math import sqrt
 import numpy as np
 import cv2 as cv
+import base64
 #import matplotlib
 #matplotlib.use('TkAgg')
 #import matplotlib.pyplot as plt
@@ -228,7 +229,7 @@ def process_image(value, height, width, offset, high_pass_filter=False, reduce_g
 	#make sure that center doesn't have duplicates
 	center = np.unique(center)
 	#print(center)
-	#k = center.size
+	k = center.size
 	#print(f'actual k = {k}')
 
 	# create and apply contour for areas of all k colors

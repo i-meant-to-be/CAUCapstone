@@ -48,6 +48,9 @@ android {
 
     buildTypes {
         release {
+            ndk {
+                debugSymbolLevel "SYMBOL_TABLE"
+            }
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug

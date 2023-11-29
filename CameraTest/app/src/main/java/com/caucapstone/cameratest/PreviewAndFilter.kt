@@ -393,7 +393,7 @@ fun stripeFilter(inputBitmap: Bitmap, blindType : Int): Bitmap {
 
             val diffHue = minOf(abs(hue - criteria), hue + 360 - criteria,criteria + 360 - hue)
             // 색각이상별로 잘 안보이는 색상(적색계열, 녹색계열, 청색계열)의 hue값에 검정무늬 넣기
-            if ((abs(hue - criteria) <= v || hue + 360 - criteria <= v || criteria + 360 - hue <= v) && sat > 0.30 && (x+y)%19 == 1 ) {
+            if ((diffHue <= v) && sat > 0.30 && (x+y)%19 == 1 ) {
                 val pointColor =Color.argb((255*(1-diffHue/50)).toInt(),0,0,0)
                 try {
                     outputBitmap.setPixel(x+1, y, pointColor)

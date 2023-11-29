@@ -70,7 +70,7 @@ def content_isolation(img): #must be hsv image
 	
 	return img_
 
-def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=True):
+def process_image(value, height, width, offset, high_pass_filter=False, reduce_glare=True):
 
 	erode_color_mask = True
 	bilateral_filter = True
@@ -202,7 +202,9 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 	'''
  	
 	k = m*2 + K_SEARCH_RANGE_START
-	
+	k += offset
+	if k<2:
+		k=2
 	# perform KNN
 	hue,sat,val = cv.split(img)
 	hue = hue.reshape((-1, 1))
@@ -226,7 +228,7 @@ def process_image(value, height, width, k, high_pass_filter=False, reduce_glare=
 	#make sure that center doesn't have duplicates
 	center = np.unique(center)
 	#print(center)
-	k = center.size
+	#k = center.size
 	#print(f'actual k = {k}')
 
 	# create and apply contour for areas of all k colors

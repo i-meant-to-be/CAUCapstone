@@ -39,7 +39,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.caucapstone.app.ColorBlindType
-import com.caucapstone.app.FilterType
 import com.caucapstone.app.R
 import com.caucapstone.app.SettingProto
 import com.caucapstone.app.data.globalPaddingValue
@@ -71,50 +70,6 @@ fun SettingScreen(viewModel: SettingViewModel = hiltViewModel()) {
             steps = 9,
             valueRange = -5f..5f
         )
-        FilterTypeSettingItem(
-            onClick = { viewModel.setFilterTypeExpanded(true) },
-            buttonText = {
-                val text = when (data.defaultFilterType) {
-                    FilterType.FILTER_NONE -> stringResource(R.string.filter_name_none)
-                    FilterType.FILTER_SPECIFIC -> stringResource(R.string.filter_name_specific)
-                    FilterType.FILTER_DALTONIZED -> stringResource(R.string.filter_name_daltonized)
-                    FilterType.FILTER_STRIPE -> stringResource(R.string.filter_name_stripe)
-                    else -> stringResource(R.string.filter_name_none)
-                }
-                Text(text)
-            },
-            expanded = viewModel.filterTypeExpanded.value,
-            onDismissRequest = { viewModel.setFilterTypeExpanded(false) }
-        ) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.filter_name_none)) },
-                onClick = {
-                    viewModel.setDefaultFilterType(FilterType.FILTER_NONE)
-                    viewModel.setFilterTypeExpanded(false)
-                }
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.filter_name_specific)) },
-                onClick = {
-                    viewModel.setDefaultFilterType(FilterType.FILTER_SPECIFIC)
-                    viewModel.setFilterTypeExpanded(false)
-                }
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.filter_name_stripe)) },
-                onClick = {
-                    viewModel.setDefaultFilterType(FilterType.FILTER_STRIPE)
-                    viewModel.setFilterTypeExpanded(false)
-                }
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.filter_name_daltonized)) },
-                onClick = {
-                    viewModel.setDefaultFilterType(FilterType.FILTER_DALTONIZED)
-                    viewModel.setFilterTypeExpanded(false)
-                }
-            )
-        }
         ColorBlindTypeSettingItem(
             onClick = { viewModel.setColorBlindTypeExpanded(true) },
             buttonText = {

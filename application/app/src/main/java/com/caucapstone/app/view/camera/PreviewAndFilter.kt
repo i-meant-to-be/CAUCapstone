@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +37,7 @@ import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.caucapstone.app.ColorBlindType
 import com.caucapstone.app.FilterType
+import com.caucapstone.app.SettingProto
 import com.caucapstone.app.view.saveImageToInternalStorage
 import com.caucapstone.app.viewmodel.CameraViewModel
 import kotlinx.coroutines.launch
@@ -46,7 +48,7 @@ import kotlin.math.abs
 object GlobalVariables {
     var coverRotation: Int = 0
     var hueCriteria = 0F
-    var blindType: ColorBlindType = ColorBlindType.COLOR_BLIND_PROTANOPIA
+    var blindType: ColorBlindType = ColorBlindType.COLOR_BLIND_NONE
     var filterType: FilterType = FilterType.FILTER_NONE
     var rgb = Triple(0, 0, 0)
     var aprxRgb = Triple(0, 0, 0)
@@ -60,6 +62,7 @@ fun PreviewAndFilter(
     viewModel: CameraViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val data = viewModel.settingFlow.collectAsState(SettingProto.getDefaultInstance()).value
 
     Box(modifier = modifier) {
         val lifecycleOwner = LocalLifecycleOwner.current
@@ -78,10 +81,11 @@ fun PreviewAndFilter(
                 bitmap = rotatedBitmap.asImageBitmap()
             }
         )
+
+        GlobalVariables.blindType = data.colorBlindType
         viewModel.setColorCodes(GlobalVariables.aprxRgb)
         viewModel.setColorName(GlobalVariables.aprxColorName)
         GlobalVariables.hueCriteria = viewModel.sliderValue.value
-        GlobalVariables.blindType = viewModel.currColorBlindType.value
         GlobalVariables.filterType = viewModel.currFilterType.value
 
         LaunchedEffect(previewUseCase) {
@@ -256,7 +260,7 @@ class FilterAnalyzer(private val callBackBitMap: (Bitmap?) -> Unit): ImageAnalys
                 val hue = hsv[0]
 
                 // Check if the hue value is within the desired range
-                if ((diffHue <= v) && sat > 0.30 && (x+y)%19 == 1 ) {
+                if (abs(hue - hueCriteria) <= v || hueCriteria + 360 - hue <= v || hue + 360 - hueCriteria <= v) {
                     try {
                         outputBitmap.setPixel(x, y, pixel) // Keep the original color
                         outputBitmap.setPixel(x + 1, y, scaledBitmap.getPixel(x + 1,y))

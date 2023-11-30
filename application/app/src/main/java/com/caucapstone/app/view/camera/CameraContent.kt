@@ -111,11 +111,27 @@ fun BlackModeSlider(
                 .clip(RoundedCornerShape(30.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
                 .padding(
-                    top = 20.dp,
+                    top = 5.dp,
                     start = 15.dp,
                     end = 15.dp
                 )
         ) {
+            Row(
+            modifier = Modifier
+                .padding(
+                    bottom = 3.dp
+                )
+            ){
+                Text(text = "빨", modifier = Modifier.weight(17f))
+                Text(text = "주", modifier = Modifier.weight(12f))
+                Text(text = "노", modifier = Modifier.weight(31f))
+                Text(text = "초", modifier = Modifier.weight(33f))
+                Text(text = "하", modifier = Modifier.weight(27f))
+                Text(text = "파", modifier = Modifier.weight(29f))
+                Text(text = "보", modifier = Modifier.weight(12f))
+                Text(text = "분", modifier = Modifier.weight(27f))
+                Text(text = "빨", modifier = Modifier.weight(12f))
+            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

@@ -206,8 +206,8 @@ class filterAnalyzer(private val callBackBitMap: (Bitmap?) -> Unit) : ImageAnaly
         val currentTimestamp = System.currentTimeMillis()
         if (currentTimestamp - lastAnalyzedTimestamp >= TimeUnit.MILLISECONDS.toMillis(300)) {
 
-        //ColorToText 클래스 접근해서 근사 대표 색상 받아오기
-        val representativeColor = ColorToText.analyzer(red, green, blue)
+            //ColorToText 클래스 접근해서 근사 대표 색상 받아오기
+            val representativeColor = ColorToText.analyzer(red, green, blue)
 
             GlobalVariables.rgb = Triple(red,green,blue)
             GlobalVariables.aprxColorName = representativeColor[0].toString()
@@ -241,7 +241,7 @@ fun coverFilter(inputBitmap: Bitmap, hueCriteria: Float): Bitmap {
 
     val scaledBitmap: Bitmap = Bitmap.createScaledBitmap(inputBitmap, width, height, true)
     val outputBitmap = toGrayscale(scaledBitmap)
-    val v = 10
+    val v = 15
 
     for (x in 0 until width step 2) {
         for (y in 0 until height step 2) {

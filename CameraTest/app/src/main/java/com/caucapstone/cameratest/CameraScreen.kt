@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
@@ -106,18 +108,64 @@ fun CameraScreen() {
 }
 
 
+private val colors = (1..360).map { hue ->
+    Color(android.graphics.Color.HSVToColor(floatArrayOf(hue.toFloat(), 1f, 1f)))
+}
+
 @Composable
 fun BlackModeSlider(
     value: Float,
     onValueChange: (Float) -> Unit,
 ) {
-    Slider(
-        value = value,
-        onValueChange = onValueChange,
-        steps = 0,
-        valueRange = 0f..360f,
-        modifier = Modifier.fillMaxWidth()
-    )
+    val currWidth = LocalConfiguration.current.screenWidthDp
+
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width((currWidth * 0.8).dp)
+            .clip(RoundedCornerShape(30.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+            .padding(
+                top = 3.dp,
+                start = 15.dp,
+                end = 15.dp
+            )
+    ) {
+            Row(
+                modifier = Modifier
+                    .padding(
+                        bottom = 3.dp
+                    )
+            ){
+                Text(text = "빨", modifier = Modifier.weight(17f))
+                Text(text = "주", modifier = Modifier.weight(12f))
+                Text(text = "노", modifier = Modifier.weight(31f))
+                Text(text = "초", modifier = Modifier.weight(33f))
+                Text(text = "하", modifier = Modifier.weight(27f))
+                Text(text = "파", modifier = Modifier.weight(29f))
+                Text(text = "보", modifier = Modifier.weight(12f))
+                Text(text = "분", modifier = Modifier.weight(27f))
+                Text(text = "빨", modifier = Modifier.weight(12f))
+            }
+            Spacer(modifier = Modifier.height(3.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(5.dp)
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(
+                        brush = Brush.horizontalGradient(colors)
+                    )
+            )
+            Slider(
+                value = value,
+                onValueChange = onValueChange,
+                steps = 0,
+                valueRange = 0f..360f,
+                modifier = Modifier.fillMaxWidth()
+            )
+    }
 }
 
 @Composable
@@ -227,7 +275,6 @@ fun TopOptionBar(
         verticalArrangement = Arrangement.Top,
         modifier = Modifier.fillMaxWidth()
     ) {
-        BlackModeSlider(sliderValue, onSliderValueChange)
         Row() {
             ReducibleRadioButton(
                 value = filterType == FilterType.FILTER_NONE,
@@ -242,28 +289,29 @@ fun TopOptionBar(
             ReducibleRadioButton(
                 value = filterType == FilterType.FILTER_STRIPE,
                 onClick = {
-                            if(blindType in TYPE_NUM_PROTANOPIA .. TYPE_NUM_TRITANOPIA) {
-                                onClick(FilterType.FILTER_STRIPE)
-                            }
-                            else{
-                                Toast.makeText(context, "설정에서 본인의 색각이상을 선택해주세요", Toast.LENGTH_SHORT).show()
-                            }
-                          },
+                    if(blindType in TYPE_NUM_PROTANOPIA .. TYPE_NUM_TRITANOPIA) {
+                        onClick(FilterType.FILTER_STRIPE)
+                    }
+                    else{
+                        Toast.makeText(context, "설정에서 본인의 색각이상을 선택해주세요", Toast.LENGTH_SHORT).show()
+                    }
+                },
                 label = "줄무늬 필터"
             )
             ReducibleRadioButton(
                 value = filterType == FilterType.FILTER_DALTONIZED,
                 onClick = {
-                            if(blindType in TYPE_NUM_PROTANOPIA .. TYPE_NUM_TRITANOPIA){
-                                onClick(FilterType.FILTER_DALTONIZED)
-                            }
-                            else{
-                                Toast.makeText(context, "설정에서 본인의 색각이상을 선택해주세요", Toast.LENGTH_SHORT).show()
-                            }
-                          },
+                    if(blindType in TYPE_NUM_PROTANOPIA .. TYPE_NUM_TRITANOPIA){
+                        onClick(FilterType.FILTER_DALTONIZED)
+                    }
+                    else{
+                        Toast.makeText(context, "설정에서 본인의 색각이상을 선택해주세요", Toast.LENGTH_SHORT).show()
+                    }
+                },
                 label = "색상 조정 필터"
             )
         }
+        BlackModeSlider(sliderValue, onSliderValueChange)
     }
 }
 

@@ -24,6 +24,7 @@
     <string name="dialog_universal_dialog_yes">네</string>
     <string name="dialog_universal_dialog_no">아니오</string>
     <string name="dialog_delete_image">사진을 삭제하실 건가요?</string>
+    <string name="dialog_delete_image_all">정말 모든 사진을 삭제하실 건가요?</string>
     <string name="dialog_processing_image">사진을 처리하고 있습니다…</string>
 
     <string name="setting_option_name_doc_mode">"문서 모드</string>

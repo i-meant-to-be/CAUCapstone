@@ -238,7 +238,7 @@ fun ImageViewImage(
                 }
             }
         )
-        Text("$offsetX, $offsetY")
+        // Text("$offsetX, $offsetY")
     }
 }
 

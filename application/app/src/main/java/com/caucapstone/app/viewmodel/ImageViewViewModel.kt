@@ -146,7 +146,7 @@ class ImageViewViewModel @Inject constructor(
                 /* value */ byteArrayOutputStream.toByteArray(),
                 /* height */ originImage.height,
                 /* width */ originImage.width,
-                /* colorSensitivity */ 6,
+                /* colorSensitivity */ colorSensitivity,
                 /* docMode */ docMode,
                 /* glare */ removeGlare
             ).asList()

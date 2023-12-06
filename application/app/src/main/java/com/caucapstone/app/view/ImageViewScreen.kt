@@ -201,7 +201,7 @@ fun ImageViewScreen(
                     viewModel.updateImage(image.copy(canBeProcessed = false))
                 },
                 image = if (!viewModel.isImageDeleted.value) image else Image.getDefaultInstance(),
-                buttonEnabled = if (!viewModel.isImageDeleted.value) image.canBeProcessed else false
+                buttonEnabled = true // if (!viewModel.isImageDeleted.value) image.canBeProcessed else false
             )
         }
     }
@@ -308,10 +308,7 @@ fun ImageViewBottomBar(
                 ) {
                     Icon(Icons.Filled.PublishedWithChanges, null)
                     Box(modifier = Modifier.width(globalPaddingValue))
-                    Text(
-                        text = stringResource(R.string.string_image_process),
-                        color = MaterialTheme.colorScheme.surfaceVariant
-                    )
+                    Text(text = stringResource(R.string.string_image_process))
                 }
             }
         }

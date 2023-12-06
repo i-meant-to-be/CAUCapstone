@@ -22,11 +22,16 @@ class FileViewModel @Inject constructor(
         .imageDao()
     private val _dialogState = mutableIntStateOf(0)
     private val _longPressEnabled = mutableStateOf(false)
+    private val _recomposeSwitch = mutableStateOf(false)
 
     val imageIdToDelete = mutableListOf<String>()
     val dialogState: State<Int> = _dialogState
     val longPressEnabled: State<Boolean> = _longPressEnabled
+    val recomposeSwitch: State<Boolean> = _recomposeSwitch
 
+    fun reverseRecomposeSwitch() {
+        _recomposeSwitch.value = !_recomposeSwitch.value
+    }
     fun getImages(): List<Image> {
         return _databaseDao.getImages()
     }

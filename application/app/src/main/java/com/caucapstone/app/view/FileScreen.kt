@@ -193,7 +193,7 @@ fun ImageItemCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp)
+                .height(120.dp)
                 .clip(RoundedCornerShape(roundedCornerShapeValue))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .combinedClickable(

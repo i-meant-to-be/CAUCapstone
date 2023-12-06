@@ -17,10 +17,9 @@ import javax.inject.Inject
 class SettingViewModel @Inject constructor(
     private val settingProtoRepository: SettingProtoRepository
 ) : ViewModel() {
-    private val _settingFlow = settingProtoRepository.flow
     private val _filterTypeExpanded = mutableStateOf(false)
     private val _colorBlindTypeExpanded = mutableStateOf(false)
-    val settingFlow: Flow<SettingProto> = _settingFlow
+    val settingFlow: Flow<SettingProto> = settingProtoRepository.flow
     val filterTypeExpanded: State<Boolean> = _filterTypeExpanded
     val colorBlindTypeExpanded: State<Boolean> = _colorBlindTypeExpanded
 

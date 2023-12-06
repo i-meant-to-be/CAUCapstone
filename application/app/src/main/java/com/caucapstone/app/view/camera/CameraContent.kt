@@ -93,6 +93,9 @@ fun BlackModeSlider(
 ) {
     val density = LocalDensity.current
     val currWidth = LocalConfiguration.current.screenWidthDp
+    val textStyle = MaterialTheme.typography.labelSmall.copy(
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 
     AnimatedVisibility(
         visible = visible,
@@ -108,10 +111,10 @@ fun BlackModeSlider(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .width((currWidth * 0.8).dp)
-                .clip(RoundedCornerShape(30.dp))
+                .clip(RoundedCornerShape(15.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
                 .padding(
-                    top = 5.dp,
+                    top = 10.dp,
                     start = 15.dp,
                     end = 15.dp
                 )
@@ -121,16 +124,52 @@ fun BlackModeSlider(
                 .padding(
                     bottom = 3.dp
                 )
-            ){
-                Text(text = "빨", modifier = Modifier.weight(17f))
-                Text(text = "주", modifier = Modifier.weight(12f))
-                Text(text = "노", modifier = Modifier.weight(31f))
-                Text(text = "초", modifier = Modifier.weight(33f))
-                Text(text = "하", modifier = Modifier.weight(27f))
-                Text(text = "파", modifier = Modifier.weight(29f))
-                Text(text = "보", modifier = Modifier.weight(12f))
-                Text(text = "분", modifier = Modifier.weight(27f))
-                Text(text = "빨", modifier = Modifier.weight(12f))
+            ) {
+                Text(
+                    text = "빨",
+                    style = textStyle,
+                    modifier = Modifier.weight(17f)
+                )
+                Text(
+                    text = "주",
+                    style = textStyle,
+                    modifier = Modifier.weight(12f)
+                )
+                Text(
+                    text = "노",
+                    style = textStyle,
+                    modifier = Modifier.weight(31f)
+                )
+                Text(
+                    text = "초",
+                    style = textStyle,
+                    modifier = Modifier.weight(33f)
+                )
+                Text(
+                    text = "하",
+                    style = textStyle,
+                    modifier = Modifier.weight(27f)
+                )
+                Text(
+                    text = "파",
+                    style = textStyle,
+                    modifier = Modifier.weight(29f)
+                )
+                Text(
+                    text = "보",
+                    style = textStyle,
+                    modifier = Modifier.weight(12f)
+                )
+                Text(
+                    text = "분",
+                    style = textStyle,
+                    modifier = Modifier.weight(32f)
+                )
+                Text(
+                    text = "빨",
+                    style = textStyle,
+                    modifier = Modifier.weight(7f)
+                )
             }
             Box(
                 modifier = Modifier

@@ -20,6 +20,7 @@
     <string name="string_request_camera_permission">앱을 정상적으로 사용할 수 있도록, 아래 버튼을 눌러 카메라 사용 권한을 허용해주세요.</string>
     <string name="string_grant_permission">카메라 권한 요청</string>
     <string name="string_image_datetime">촬영 시각</string>
+    <string name="string_please_select_color_blind_type">서비스를 사용하기 위해, 사용자의 색각 이상 유형을 선택해주세요!</string>
 
     <string name="dialog_universal_dialog_yes">네</string>
     <string name="dialog_universal_dialog_no">아니오</string>

@@ -50,7 +50,7 @@ def separate_color(value, height, width, h):
 	v[ v < lim ] += brighten
 	
 	other = cv.cvtColor(v, cv.COLOR_GRAY2BGR)
-	img = cv.cvtColor(cv.drawContours(cv.add(selected, other),contours,-1,(0,0,0),10), cv.COLOR_BGR2RGB)
+	img = cv.cvtColor(cv.drawContours(cv.add(selected, other),contours,-1,(0,0,0),6), cv.COLOR_BGR2RGB)
 	_, a = cv.imencode('.png', img)
 	
 	return base64.b64encode(a.tobytes())
@@ -249,7 +249,7 @@ def process_image(value, height, width, offset, high_pass_filter=False, reduce_g
 		if kern_size > 1 and erode_color_mask:
 			mask = cv.dilate(cv.erode(mask, kern), kern) # erode then dilate mask to get rid of mess(pixelated parts)
 		contours, hierarchy = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE) # create contour along mask
-		cv.drawContours(result_with_contour, contours, -1, (0,0,0), 10) # -1 means draw all contour, (0,0,0) is color, last is line thickness
+		cv.drawContours(result_with_contour, contours, -1, (0,0,0), 6) # -1 means draw all contour, (0,0,0) is color, last is line thickness
 		#contour_list.append(contours)
 
 	result_with_contour = cv.cvtColor(result_with_contour, cv.COLOR_HSV2RGB)

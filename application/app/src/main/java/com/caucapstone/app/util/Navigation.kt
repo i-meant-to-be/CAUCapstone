@@ -4,7 +4,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,13 +17,11 @@ import com.caucapstone.app.view.MainScreenNavItem
 import com.caucapstone.app.view.SelectColorBlindTypeScreen
 import com.caucapstone.app.view.SplashScreen
 
-fun NavController.navigateBack() {
-    if (currentBackStack.value.size > 2) {
-        popBackStack()
-    }
+fun NavHostController.navigateBack() {
+    popBackStack()
 }
 
-fun NavController.navigateBackToRoot() {
+fun NavHostController.navigateBackToRoot() {
     navigate(NestedNavItem.MainScreenItem.route) {
         popUpTo(graph.id) {
             inclusive = true
@@ -31,7 +29,7 @@ fun NavController.navigateBackToRoot() {
     }
 }
 
-fun NavController.navigateBackToRoot(route: String) {
+fun NavHostController.navigateBackToRoot(route: String) {
     navigate(route) {
         popUpTo(graph.id) {
             inclusive = true
@@ -63,7 +61,11 @@ fun Root() {
             route = NestedNavItem.SplashScreenItem.route
         ) {
             SplashScreen (
-                onNavigate = { route -> navHostController.navigate(route) }
+                onNavigate = { route -> navHostController.navigate(route) {
+                    popUpTo(NestedNavItem.SplashScreenItem.route) {
+                        inclusive = true
+                    }
+                } }
             )
         }
 

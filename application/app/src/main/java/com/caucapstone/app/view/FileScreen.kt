@@ -240,13 +240,29 @@ fun ImageItemCard(
                     horizontalAlignment = Alignment.End,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        image.caption,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                    )
+                    if (image.caption.isNotEmpty()) {
+                        Text(
+                            image.caption,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(100.dp))
+                                .background(MaterialTheme.colorScheme.primaryContainer)
+                                .padding(vertical = 3.dp, horizontal = 10.dp)
+                        )
+                        Box(modifier = Modifier.height(5.dp))
+                    }
                     Text(
                         image.localDateTime.format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)),
-                        style = MaterialTheme.typography.labelLarge
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(100.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .padding(vertical = 3.dp, horizontal = 10.dp)
                     )
                 }
             }
